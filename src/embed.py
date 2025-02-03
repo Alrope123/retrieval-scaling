@@ -95,7 +95,8 @@ def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):
                         print(f"Encoded passages {total}")
         
         allembeddings = torch.cat(allembeddings, dim=0).numpy()
-    
+
+    allembeddings = allembeddings.to(torch.float16)
     return allids, allembeddings
 
 
