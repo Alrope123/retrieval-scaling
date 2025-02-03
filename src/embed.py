@@ -127,7 +127,7 @@ def get_shard_specs(args, file_paths, file_sizes):
 def get_file_paths_and_sizes(args):
     file_sizes = []
     if "s3://" in args.raw_data_path:
-        from utils_paths import glob_path
+        from src.utils_paths import glob_path
         file_paths = sorted(
                 list(glob_path(os.path.join(args.raw_data_path, "*.jsonl.gz")))
         )
