@@ -131,6 +131,8 @@ def get_file_paths_and_sizes(args):
         file_paths = sorted(
                 list(glob_path(os.path.join(args.raw_data_path, "*.jsonl.gz")))
         )
+        print (args.raw_data_path)
+
         '''
         client = boto3.client('s3')
         m = re.match("s3://([^/]+)/(.*)",args.raw_data_path)
