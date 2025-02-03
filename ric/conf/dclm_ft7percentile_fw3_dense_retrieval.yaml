@@ -41,7 +41,7 @@ datastore:
     no_title: False
     lowercase: False
     normalize_text: False
-    # fields_to_add: ["subreddit"]
+    fields_to_add: [] #"subreddit"]
     # logloc: output #was using this to write passages to a log for sanity checking / debugging
 
 
