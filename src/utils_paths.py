@@ -13,8 +13,6 @@ import smart_open
 from fsspec import AbstractFileSystem, get_filesystem_class
 from smart_open.compression import get_supported_extensions
 
-from .loggers import get_logger
-
 __all__ = [
     "glob_path",
     "sub_prefix",
@@ -44,8 +42,6 @@ ESCAPE_SYMBOLS_MAP = {"*": "\u2581", "?": "\u2582", "[": "\u2583", "]": "\u2584"
 REVERSE_ESCAPE_SYMBOLS_MAP = {v: k for k, v in ESCAPE_SYMBOLS_MAP.items()}
 PATCHED_GLOB = False
 
-
-LOGGER = get_logger(__name__)
 
 
 def _get_fs(path: Union[Path, str]) -> AbstractFileSystem:
@@ -448,10 +444,10 @@ def cached_path(path: str) -> str:
 
     destination = f"{get_cache_dir()}/{resource_to_filename(path)}"
     if exists(destination):
-        LOGGER.info(f"Using cached file {destination} for {path}")
+        # LOGGER.info(f"Using cached file {destination} for {path}")
         return destination
 
-    LOGGER.info(f"Downloading {path} to {destination}")
+    # LOGGER.info(f"Downloading {path} to {destination}")
     with smart_open.open(path, "rb") as src, smart_open.open(destination, "wb") as dest:
         dest.write(src.read())
 
