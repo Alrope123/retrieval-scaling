@@ -28,12 +28,9 @@ gantry run \
     --env-secret AWS_SECRET_ACCESS_KEY=SEWONM_AWS_SECRET_ACCESS_KEY \
     --env-secret WANDB_API_KEY=SEWONM_WANDB_API_KEY \
     --shared-memory 10GiB \
+    --weka oe-data-default:/data \
     --yes \
     -- python -m ric.main_ric --config-name example_config tasks.datastore.embedding=true
 
-
-
-#    --weka oe-data-default:/data \
- 
 
 
