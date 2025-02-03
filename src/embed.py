@@ -1,4 +1,5 @@
 import os
+import re
 
 import argparse
 import csv
@@ -9,6 +10,14 @@ from tqdm import tqdm
 
 import numpy as np
 import torch
+import math
+
+import boto3
+import smart_open
+import json
+import gzip
+
+from pathlib import Path
 
 from transformers import AutoTokenizer, AutoModel
 from sentence_transformers import SentenceTransformer
@@ -18,10 +27,10 @@ import contriever.src.contriever
 import contriever.src.utils
 import contriever.src.normalize_text
 
-from src.data import fast_load_jsonl_shard
+from src.data import fast_load_jsonl_shard, fast_load_jsonl_shard_full_files
 
 
-def embed_passages(args, passages, model, tokenizer):
+def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):
     if "sentence-transformers" in args.model_name_or_path:
         allids, alltext = [], []
         for k, p in tqdm(enumerate(passages)):
@@ -43,6 +52,7 @@ def embed_passages(args, passages, model, tokenizer):
         total = 0
         allids, allembeddings = [], []
         batch_ids, batch_text = [], []
+        tot_psgs = len(passages)
         with torch.no_grad():
             for k, p in tqdm(enumerate(passages)):
                 batch_ids.append(p["id"])
@@ -56,7 +66,7 @@ def embed_passages(args, passages, model, tokenizer):
                     text = contriever.src.normalize_text.normalize(text)
                 batch_text.append(text)
 
-                if len(batch_text) == args.per_gpu_batch_size or k == len(passages) - 1:
+                if len(batch_text) == args.per_gpu_batch_size or k == tot_psgs - 1:
 
                     encoded_batch = tokenizer.batch_encode_plus(
                         batch_text,
@@ -66,6 +76,7 @@ def embed_passages(args, passages, model, tokenizer):
                         truncation=True,
                     )
 
+                    print(f"EMBEDDING UP TO PSG {k} out of {tot_psgs} (in shard {shard_id} of {num_shards})")
                     encoded_batch = {k: v.cuda() for k, v in encoded_batch.items()}
                     embeddings = model(**encoded_batch)  # shape: (per_gpu_batch_size, hidden_size)
                     if "contriever" not in args.model_name_or_path:
@@ -100,6 +111,60 @@ def get_sharded_passages(args, all_passages):
     print(f"Using {len(passages)} passages from idx {start_idx} to {end_idx}.")
     return passages
 
+def get_shard_specs(args, file_paths, file_sizes):
+    total_size = sum(file_sizes)
+
+    if args.get("max_shard_size",None):
+        shard_size = args.max_shard_size
+        num_shards = math.floor(total_size/shard_size) + 1
+    elif args.get("num_shards",None):
+        shard_size = total_size / args.num_shards
+        num_shards = args.num_shards
+
+    return num_shards,shard_size
+
+def get_file_paths_and_sizes(args):
+    if "s3://" in args.raw_data_path:
+        client = boto3.client('s3')
+        m = re.match("s3://([^/]+)/(.*)",args.raw_data_path)
+        bucket, filedir = m.groups()[0],m.groups()[1]
+        paginator = client.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=bucket, Prefix=filedir)
+
+        file_paths = []
+        file_sizes = []
+        for page in pages:
+            for obj in page["Contents"]:
+                okey = obj["Key"]
+                if ".json" not in okey.split("/")[-1]:
+                    continue
+                filepath = f"s3://{bucket}/{okey}"
+                file_paths.append(filepath)
+                # file_sizes.append(obj["Size"])
+
+    else:
+        for file in os.listdir(args.raw_data_path):
+            file_paths.append(os.path.join(args.raw_data_path, file))
+            # file_sizes.append(os.path.getsize(file_path))
+
+    return file_paths,file_sizes
+
+def get_file_partitions(args):
+    file_paths,_ = get_file_paths_and_sizes(args)
+
+    rank = int(os.environ.get("BEAKER_REPLICA_RANK"))
+    world_size = int(os.environ.get("BEAKER_REPLICA_COUNT"))
+    # Distribute files across processes
+    files_per_process = len(file_paths) / world_size
+    start_idx = int(rank * files_per_process)
+    end_idx = int((rank + 1) * files_per_process) if rank < world_size - 1 else len(file_paths)
+    partition_file_paths = file_paths[start_idx:end_idx]
+    # partition_file_sizes = file_sizes[start_idx:end_idx]
+
+    print(f"This worker (rank {rank}) handling files:\n {partition_file_paths[0]}\n to\n {partition_file_paths[-1]}")
+
+    return partition_file_paths,rank
+
 
 def generate_passage_embeddings(cfg):
     if cfg.model.get("sparse_retriever", None):
@@ -122,30 +187,47 @@ def generate_passage_embeddings(cfg):
             print(f"{args.model_name_or_path} is not supported!")
             raise AttributeError
         
+        # arg_num_shards = args.get("num_shards",None)
+        # arg_max_shard_size = args.get("max_shard_size",None)
+        # assert sum([bool(arg_num_shards),bool(arg_max_shard_size)]) == 1 , "Specify either datastore.embedding.num_shards or datastore.embedding.max_shard_size, but not both"
+        
         model.eval()
         model = model.cuda()
         if not args.no_fp16:
             model = model.half()
         
-        shard_ids = [int(i) for i in args.shard_ids]
 
-        for shard_id in shard_ids:
-            embedding_shard_save_path = os.path.join(args.embedding_dir, args.prefix + f"_{shard_id:02d}.pkl")
+        partition_file_paths,rank = get_file_partitions(args)
+        # num_shards,shard_size = get_shard_specs(args, partition_file_paths,partition_file_sizes)
+
+
+        num_files = args.max_files_per_shard if args.get("max_files_per_shard",None) else len(partition_file_paths)
+        start_list = range(0,len(partition_file_paths),num_files)
+        num_shards = len(start_list)
+
+        for shard_id, shard_start in enumerate(start_list):
+            print(f"Processing EMBEDDING SHARD {shard_id} out of {num_shards} shards (for worker {rank})")
+            embedding_shard_save_path = os.path.join(args.embedding_dir, args.prefix + f"{rank}_{shard_id:02d}.pkl")
             
             if os.path.exists(embedding_shard_save_path) and args.get("use_saved_if_exists", "true"):
                 print(f"Embeddings exist in {embedding_shard_save_path}")
                 continue
             
-            shard_passages = fast_load_jsonl_shard(args, shard_id)
+            shard_passages = fast_load_jsonl_shard_full_files(args, partition_file_paths, rank, shard_id, shard_start, num_files, num_shards)
+            if args.get("logloc",None):
+                logpath = Path(args.logloc)
+                logpath.mkdir(parents=True, exist_ok=True)
+                with open(os.path.join(args.logloc,f"{rank}_{shard_id:02d}.json"),"w") as logout:
+                    logout.write(json.dumps(shard_passages,indent=4))
 
-            allids, allembeddings = embed_passages(args, shard_passages, model, tokenizer)
+            allids, allembeddings = embed_passages(args, shard_passages, model, tokenizer, shard_id, num_shards)
 
             os.makedirs(args.embedding_dir, exist_ok=True)
             print(f"Saving {len(allids)} passage embeddings to {embedding_shard_save_path}.")
-            with open(embedding_shard_save_path, mode="wb") as file:
+            with smart_open.open(embedding_shard_save_path, mode="wb") as file:
                 pickle.dump((allids, allembeddings), file)
 
-            print(f"Processed {len(allids)} passages in the {shard_id}-th (out of {args.num_shards}) shard.\nWritten to {embedding_shard_save_path}.")
+            print(f"Processed {len(allids)} passages in the {shard_id}-th (out of {num_shards}) shard.\nWritten to {embedding_shard_save_path}.")
 
 
 if __name__ == "__main__":

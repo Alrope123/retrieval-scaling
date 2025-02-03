@@ -22,12 +22,12 @@ model:
 
 datastore:
   domain: reddit
-  raw_data_path: s3://ai2-llm/pretraining-data/sources/reddit/dolma_raw/complete/path/as/desired
+  raw_data_path: s3://ai2-llm/pretraining-data/sources/reddit/dolma_raw/merged_versions/merged_qa_wsubreddit/merged_qa_prefilter
   chunk_size: 256  # chunk size in number of words
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /data/path/to/desired/output
+    output_dir: /data/allysone/reddit/dense-retrieval/merged_qa_prefilter_dr_output
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}

@@ -14,6 +14,10 @@ from collections import Counter
 from omegaconf import ListConfig
 import multiprocessing
 
+import smart_open
+
+from pathlib import Path
+
 import numpy as np
 import torch
 from transformers import AutoTokenizer, AutoModel
@@ -32,7 +36,7 @@ from contriever.src.evaluation import calculate_matches
 import contriever.src.normalize_text
 
 from src.data import load_eval_data
-from src.index import Indexer, get_index_dir_and_passage_paths, get_index_passages_and_id_map, get_bm25_index_dir
+from src.index import Indexer, get_index_dir_and_passage_paths, get_index_passages_and_id_map, get_bm25_index_dir, get_glob_flex
 from src.decontamination import check_below_lexical_overlap_threshold
 try:
     from utils.deduplication import remove_duplicates_with_minhash, multiprocess_deduplication
@@ -113,7 +117,7 @@ def validate(data, workers_num):
     return match_stats.questions_doc_hits
 
 
-def add_passages(data, passages, top_passages_and_scores, valid_query_idx, domain=None):
+def add_passages(data, passages, top_passages_and_scores, valid_query_idx, embedding_args, domain=None):
     # add passages to original data
     assert len(valid_query_idx) == len(top_passages_and_scores)
     idx = 0
@@ -121,20 +125,22 @@ def add_passages(data, passages, top_passages_and_scores, valid_query_idx, domai
         if i in valid_query_idx:
             results_and_scores = top_passages_and_scores[idx]
             docs = [passages[doc_id] for doc_id in results_and_scores[0]]
-            next_docs = [passages[str(int(doc_id)+1)] if int(doc_id)+1 < len(passages) else passages[doc_id] for doc_id in results_and_scores[0]]
+            # next_docs = [passages[str(int(doc_id)+1)] if int(doc_id)+1 < len(passages) else passages[doc_id] for doc_id in results_and_scores[0]]
             scores = [str(score) for score in results_and_scores[1]]
             ctxs_num = len(docs)
-            d["ctxs"] = [
-                {
+            d["ctxs"] = []
+            for c in range(ctxs_num):
+                item_dict = {
                     "id": results_and_scores[0][c],
                     "source": domain,
                     # "retrieval title": docs[c]["title"],
                     "retrieval text": docs[c]["text"],
-                    "retrieval next text": next_docs[c]["text"],
+                    # "retrieval next text": next_docs[c]["text"],
                     "retrieval score": scores[c],
                 }
-                for c in range(ctxs_num)
-            ]
+                for added_field in embedding_args.fields_to_add:
+                    item_dict[added_field] = docs[c][added_field]
+                d["ctxs"].append(item_dict)
             idx += 1
         else:
             d["ctxs"] = [None]
@@ -147,33 +153,21 @@ def add_hasanswer(data, hasanswer):
             d["hasanswer"] = hasanswer[i][k]
 
 
-def get_search_output_path(cfg, index_shard_ids):
+def get_search_output_path(cfg, query_filepath, index_shard_id):
     eval_args = cfg.evaluation
-    shards_postfix = '_'.join([str(shard_id) for shard_id in index_shard_ids])
+    shards_postfix = f"shard_{index_shard_id}"
     output_dir = os.path.join(eval_args.eval_output_dir, shards_postfix)
-    output_path = os.path.join(output_dir, os.path.basename(eval_args.data.eval_data).replace('.jsonl', '_retrieved_results.jsonl'))
+    output_path = os.path.join(output_dir, os.path.basename(query_filepath).replace('.jsonl', '_retrieved_results.jsonl'))
     return output_path
 
 
-def get_merged_search_output_path(cfg):
+def get_merged_search_output_path(cfg, query_filepath):
     index_args = cfg.datastore.index
     eval_args = cfg.evaluation
 
-    if isinstance(index_args.index_shard_ids[0], ListConfig):
-        print(f"Multi-index mode: building {len(index_args.index_shard_ids)} index for {index_args.index_shard_ids} sequentially...")
-        index_shard_ids_list = index_args.index_shard_ids
-    else:
-        print(f"Single-index mode: building a single index over {index_args.index_shard_ids} shards...")
-        index_shard_ids_list = [index_args.index_shard_ids]
-    
-    merged_postfix = ''
-    for index_shard_ids in sorted(index_shard_ids_list, key=lambda x: int(x[0])):
-        shards_postfix = '_'.join([str(shard_id) for shard_id in index_shard_ids])
-        merged_postfix += '-' + shards_postfix
-    merged_postfix = merged_postfix.strip('-')
-
+    merged_postfix = f"merged"
     output_dir = os.path.join(eval_args.eval_output_dir, merged_postfix)
-    output_path = os.path.join(output_dir, os.path.basename(eval_args.data.eval_data).replace('.jsonl', '_retrieved_results.jsonl'))
+    output_path = os.path.join(output_dir, os.path.basename(query_filepath).replace('.jsonl', '_retrieved_results.jsonl'))
     return output_path
 
 
@@ -204,26 +198,22 @@ def get_merged_subsampled_search_output_path(cfg):
     return output_path
 
 
-def search_dense_topk(cfg):
+def search_dense_topk(cfg, query_filepath):
     index_args = cfg.datastore.index
     eval_args = cfg.evaluation
     ds_domain = cfg.datastore.domain
+    embedding_args = cfg.datastore.embedding
 
-    if isinstance(index_args.index_shard_ids[0], ListConfig):
-        print(f"Multi-index mode: building {len(index_args.index_shard_ids)} index for {index_args.index_shard_ids} sequentially...")
-        index_shard_ids_list = index_args.index_shard_ids
-    else:
-        print(f"Single-index mode: building a single index over {index_args.index_shard_ids} shards...")
-        index_shard_ids_list = [index_args.index_shard_ids]
+    all_exist = False
+    # for rank, index_shard_ids in enumerate(index_shard_ids_list):
+    #     # check if all search results exist
+    #     output_path = get_search_output_path(cfg, rank, index_shard_ids)
+    #     all_exist = all_exist and os.path.exists(output_path)
 
-    all_exist = True
-    for index_shard_ids in index_shard_ids_list:
-        # check if all search results exist
-        output_path = get_search_output_path(cfg, index_shard_ids)
-        all_exist = all_exist and os.path.exists(output_path)
+    # all_exist = all_exist and os.path.exists(output_path)
     
     if all_exist and not eval_args.search.overwrite:
-        logging.info(f'All search results for {index_args.index_shard_ids} exist, skipping searching.')
+        logging.info(f'Search results exist, skipping searching.')
     
     else:
         # load model and evaluation data
@@ -248,7 +238,7 @@ def search_dense_topk(cfg):
             query_encoder = query_encoder.half()
         
         # load eval data
-        data = load_eval_data(cfg)
+        data = load_eval_data(cfg,query_filepath)
         
         # if eval_args.data.num_eval_samples is not None:
         #     random.seed(eval_args.data.seed)
@@ -272,64 +262,67 @@ def search_dense_topk(cfg):
         if eval_args.search.get('cache_query_embedding_only', False):
             return
 
-        # load index
-        for index_shard_ids in index_shard_ids_list:
-            output_path = get_search_output_path(cfg, index_shard_ids)
+        
+        all_psg_paths = get_glob_flex(os.path.join(embedding_args.passages_dir,"*.pkl"))
+        ptrn = ".*raw_passages_(.*)-(.*)-of-"
+        all_psg_paths = sorted(all_psg_paths, key=lambda x: (int(re.match(ptrn,x).group(1)),int(re.match(ptrn,x).group(2))))
+        num_files = index_args.max_files_per_index_shard if index_args.get("max_files_per_index_shard",None) else len(all_psg_paths)
+        start_list = range(0,len(all_psg_paths),num_files)
+        for index_shard_id, shard_start in enumerate(start_list):
+            copied_data = copy.deepcopy(data) 
+
+            output_path = get_search_output_path(cfg, query_filepath, index_shard_id)
+
+            # index_dir, _ = get_index_dir_and_passage_paths(cfg)
+            psg_paths = all_psg_paths[shard_start:shard_start+num_files]
+            index_dir = os.path.join(embedding_args.embedding_dir, f'index/shard_{index_shard_id}')
+            index = Indexer(index_args.projection_size, index_args.n_subquantizers, index_args.n_bits)
+            index.deserialize_from(index_dir)
+
+
+            # load passages and id mapping corresponding to the index
+            passages, passage_id_map = get_index_passages_and_id_map(cfg,psg_paths)
+            assert len(passages) == index.index.ntotal, f"number of documents {len(passages)} and number of embeddings {index.index.ntotal} mismatch"
+
+            # get top k results
+            start_time_retrieval = time.time()
+
+            top_ids_and_scores = index.search_knn(questions_embedding, eval_args.search.n_docs)
+            logging.info(f"Search time: {time.time()-start_time_retrieval:.1f} s.")
+
+            # todo: double check valid_query_idx
+            logging.info(f"Adding documents to eval data...")
+            add_passages(copied_data, passage_id_map, top_ids_and_scores, valid_query_idx, embedding_args, domain=ds_domain)
             
-            if os.path.exists(output_path) and not eval_args.search.overwrite:
-                logging.info(f'{output_path} exists, skipping searching.')
-
-            else:
-                copied_data = copy.deepcopy(data)
-
-                index_dir, _ = get_index_dir_and_passage_paths(cfg, index_shard_ids)
-                index = Indexer(index_args.projection_size, index_args.n_subquantizers, index_args.n_bits)
-                index.deserialize_from(index_dir)
-
-                # load passages and id mapping corresponding to the index
-                passages, passage_id_map = get_index_passages_and_id_map(cfg, index_shard_ids)
-                assert len(passages) == index.index.ntotal, f"number of documents {len(passages)} and number of embeddings {index.index.ntotal} mismatch"
-
-                # get top k results
-                start_time_retrieval = time.time()
-
-                top_ids_and_scores = index.search_knn(questions_embedding, eval_args.search.n_docs)
-                logging.info(f"Search time: {time.time()-start_time_retrieval:.1f} s.")
-
-                # todo: double check valid_query_idx
-                logging.info(f"Adding documents to eval data...")
-                add_passages(copied_data, passage_id_map, top_ids_and_scores, valid_query_idx, domain=ds_domain)
-                
+            if "s3://" not in output_path:
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                safe_write_jsonl(copied_data, output_path)
+            safe_write_jsonl(copied_data, output_path)
+        
     
-    if cfg.evaluation.search.get('merge_multi_source_results', False) and cfg.evaluation.search.get("topk_subsample_p", None):
-        post_hoc_merge_topk_multi_domain(cfg)
+    post_hoc_merge_topk(cfg,query_filepath)
+    # if cfg.evaluation.search.get('merge_multi_source_results', False) and cfg.evaluation.search.get("topk_subsample_p", None):
+    #     post_hoc_merge_topk_multi_domain(cfg)
 
-    elif cfg.evaluation.search.get('merge_multi_index_results', True):
-        post_hoc_merge_topk(cfg)
+    # elif cfg.evaluation.search.get('merge_multi_index_results', True):
+    #     post_hoc_merge_topk(cfg)
     
 
-def post_hoc_merge_topk(cfg):
+def post_hoc_merge_topk(cfg,query_filepath):
     """
     Post hoc merge the searched results obtained by multiple indices.
     """
     index_args = cfg.datastore.index
-    output_path = get_merged_search_output_path(cfg)
-    if os.path.exists(output_path) and not cfg.evaluation.search.overwrite:
-        print(f"The merged path exists, skipping...\n{output_path}")
-        return
-
-    if isinstance(index_args.index_shard_ids[0], ListConfig) and len(index_args.index_shard_ids) > 1:
-        print(f"Multi-index mode: building {len(index_args.index_shard_ids)} index for {index_args.index_shard_ids} sequentially...")
-        index_shard_ids_list = index_args.index_shard_ids
-    else:
-        print(f"Single-index mode: no need to merge")
-        return
+    embedding_args = cfg.datastore.embedding
+    output_path = get_merged_search_output_path(cfg,query_filepath)
+    # if os.path.exists(output_path) and not cfg.evaluation.search.overwrite:
+    #     print(f"The merged path exists, skipping...\n{output_path}")
+    #     return
     
     merged_data = []
-    for i, index_shard_ids in enumerate(index_shard_ids_list):
-        path_to_merge = get_search_output_path(cfg, index_shard_ids)
+    index_overall_dir = os.path.join(embedding_args.embedding_dir, f"index")
+    num_index_shards = len(os.listdir(index_overall_dir))
+    for index_shard_id in range(num_index_shards):
+        path_to_merge = get_search_output_path(cfg, query_filepath, index_shard_id)
         print(f"Adding {path_to_merge}")
         
         data_to_merge = []
@@ -351,7 +344,7 @@ def post_hoc_merge_topk(cfg):
                 _ex['ctxs'] = ctxs
                 data_to_merge.append(_ex)
         
-        if i == 0:
+        if index_shard_id == 0:
             merged_data = data_to_merge
         
         else:
@@ -826,22 +819,40 @@ def search_sparse_topk(cfg):
 def safe_write_jsonl(data, output_file):
     success = False
     try:
-        with open(output_file, 'w') as fout:
+        with smart_open.open(output_file, 'w') as fout:
             for ex in data:
                 fout.write(json.dumps(ex) + "\n")
             success = True
         logging.info(f"Saved results to {output_file}")
     except Exception as e:
         print(f"An error occurred: {e}")
-    finally:
-    # If an error was raised, and success is still False, delete the file
-        if not success and os.path.exists(output_file):
-            os.remove(output_file)
-            print(f"File '{output_file}' has been deleted due to an error.")
+    # finally:
+    # # If an error was raised, and success is still False, delete the file
+    #     if not success and os.path.exists(output_file):
+    #         os.remove(output_file)
+    #         print(f"File '{output_file}' has been deleted due to an error.")
 
+def partition_input_filepaths(file_paths):
+
+    rank = int(os.environ.get("BEAKER_REPLICA_RANK"))
+    world_size = int(os.environ.get("BEAKER_REPLICA_COUNT"))
+    # Distribute files across processes
+    files_per_process = len(file_paths) / world_size
+    start_idx = int(rank * files_per_process)
+    end_idx = int((rank + 1) * files_per_process) if rank < world_size - 1 else len(file_paths)
+    partition_file_paths = file_paths[start_idx:end_idx]
+    # partition_file_sizes = file_sizes[start_idx:end_idx]
+
+    print(f"This worker (rank {rank}) handling files:\n {partition_file_paths}")
+
+    return partition_file_paths
 
 def search_topk(cfg):
     if cfg.model.get("sparse_retriever", None):
         search_sparse_topk(cfg)
     else:
-        search_dense_topk(cfg)
+        all_query_files = get_glob_flex(cfg.evaluation.data.eval_data)
+        partitioned_files = partition_input_filepaths(all_query_files)
+        for query_file in partitioned_files:
+            print(f"\nSearching on queries in {query_file}")
+            search_dense_topk(cfg,query_file)

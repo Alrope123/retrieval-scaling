@@ -1,9 +1,15 @@
-# Dense Retrieval Codebase
+# Scaling Retrieval-Based Langauge Models with a Trillion-Token Datastore
 
-This repo is based on the code from paper "Scaling Retrieval-Based Langauge Models with a Trillion-Token Datastore".
+Code and data for paper "Scaling Retrieval-Based Langauge Models with a Trillion-Token Datastore".
 
 [[Website](https://retrievalscaling.github.io)][[Paper](https://arxiv.org/abs/2407.12854)]
 
+**Datastores:** [🤗 MassiveDS-1.4T](https://huggingface.co/datasets/rulins/MassiveDS-1.4T) | [🤗 MassiveDS-140B](https://huggingface.co/datasets/rulins/MassiveDS-140B)
+
+
+<img src=images/scaling_gif.gif width="666" alt="Scaling overview.">
+
+If you find our code, data, models, or the paper useful, please cite the paper:
 ```
 @article{shao2024scaling,
   title={Scaling Retrieval-Based Language Models with a Trillion-Token Datastore},
@@ -16,63 +22,113 @@ This repo is based on the code from paper "Scaling Retrieval-Based Langauge Mode
 # Overview
 This codebase contains:
 
-1. Embedding
-2. Indexing
-3. Search
+1. Easy development and evaluation for retrieval-based language models (LMs)---run all experiments with one YAML file ([Quick Start](#quick-start)).
+2. Our efficient MassiveDS pipeline for affordable datastore scaling study with retrieval-based LMs ([Advanced Usage](#advanced-usage)).
+3. A comprehensive evaluation suite for retrieval-based LMs ([Evaluation](#evaluation)| [RAG-Evaluation-Harnesses](https://github.com/RulinShao/RAG-evaluation-harnesses)).
 
 
 ## Installation
-Clone repo and checkout `reddit-exps` branch.
+Install dependent Python libraries by running the command below.
 
-Note from original repo (I didn't try this, though it may be installed on the image we're using): "to accelerate the inference, we recommend users to install flash attention based on their accelerator type following the instructions [here](https://github.com/Dao-AILab/flash-attention)."
+```bash
+# clone the repo
+git clone https://github.com/RulinShao/retrieval-scaling.git
+cd retrieval-scaling
 
-## Gantry scripts
-There are three scripts for running embedding, indexing, and search via gantry. Current parallelization method assumes 1 GPU per replica, so for all scripts **keep the setting of "--gpus 1"**.
-
-**1. Embedding**: `run_gantry_embedding.sh`. 
-This is the first place where we distribute across GPUs, to accelerate the embedding process. To increase parallelization, increase `--replicas`. Note that the parallelization works by partitioning input files across replicas, so this won't be effective if you have very few input files.
+# create a new conda environment and install dependencies
+conda env create -f environment.yml
+conda activate scaling
 ```
---gpus 1 \
---replicas 8 \
-``` 
+Note: to accelerate the inference, we recommend users to install flash attention based on their accelerator type following the instructions [here](https://github.com/Dao-AILab/flash-attention).
 
-**2. Indexing**: `run_gantry_index.sh`.
-Not currently set up to distribute across GPUs, so keep as below.
-```
---gpus 1 \
---replicas 1 \
+To create a CPU-only environment:
+```bash
+conda env create -f environment_cpu.yml
+conda activate scaling_cpu
 ```
 
-**3. Search**: `run_gantry_search.sh`.
-Was not originally planning to parallelize this step, but I had a large number of files with queries (57 files corresponding to MMLU categories) so I ended up modifying the code to partition those query files across replicas to speed things up. In the current example I use 24 replicas. 
+## Quick Start
+For a quick start, we provide a script that constructs a datastore using data in [FineWeb-Edu-1MT](https://huggingface.co/datasets/rulins/FineWeb-Edu-1MT) and evaluates it with LM [Pythia-1B](https://huggingface.co/EleutherAI/pythia-1b). 
+
+**Download example data**
+
+To start, downloaded the example data and save it in `raw_data/`.
+
+```bash
+mkdir -p raw_data
+wget -O raw_data/fineweb-edu-1m.jsonl https://huggingface.co/datasets/rulins/FineWeb-Edu-1MT/resolve/main/fineweb-edu-1M.jsonl?download=true
 ```
---gpus 1 \
---replicas 24 \
+
+**Construct a Datastore**
+
+Below command constructs a datastore using [Contriever-MSMACRO](https://huggingface.co/facebook/contriever-msmarco) as the retriever.
+You can set the retriever to others that are supported in HuggingFace or SentenceTransformers through `model.datastore_encoder`. We also support sparse retriever BM25, to use which, pass `model.sparse_retriever=bm25`. 
+
+```bash
+PYTHONPATH=.  python ric/main_ric.py --config-name example_config
 ```
-## Config
+<!-- 1B token: 3518123 passages; 47 minutes; -->
+<!-- Note: the datastore construction takes X minutes on 1 L40 GPU. If you want to quickly go through the code, please parallelize the job or further subsample the raw data. -->
 
-Example config file `example_config.yaml` can be found in `ric/conf/`. That is the config the current gantry scripts are pointing to.
+**Evaluate Perplexity**
 
-Settings that need to be filled in:
+Next, we provide an example script to evaluate the perplexity on C4 data. You can use your own eval data by setting `evaluation.data.eval_data` to the path to your own JSONL file. 
+```bash
+PYTHONPATH=.  python ric/main_ric.py --config-name example_config \
+  tasks.eval.task_name=perplexity \
+  tasks.eval.search=true \
+  tasks.eval.inference=true
+```
 
-- `datastore.raw_data_path`: This should be a directory containing the data to be embedded/indexed/searched. Assumes json/jsonl files with a json dict object per line, containing "text" field with the text to be embedded. Should work for directories on S3 or local, and should work for .gz files. (Not currently set up for glob inputs.)
-- `datastore.embedding.output_dir`: This is the top-level location where all outputs (embeddings, passages, index, retrieval outputs) will be written. The gantry scripts mount WEKA (oe-data-default) to /data and I've been writing the outputs there. (S3 ended up causing problems as a location for the index in particular.)
+The evaluation result will be printed in terminal and saved in `scaling_out/test_c4_ppl.log`.
 
-Other things to note:
+**Evaluate Downstream Task**
 
-- `datastore.embedding.max_files_per_shard`: Max number of input files to be included in an embedding file shard. I had very large files so I set this to 1.
-- `datastore.embedding.fields_to_add`: Other fields in the input jsons that you want saved with the passages (other than "text"). I used this to keep the "subreddit" field.
-- `datastore.index.max_files_per_index_shard`: Max number of embedding files per index shard. 
-- `evaluation.data.eval_data`: This expects a path to the query file/files, in glob format.
-- `tasks.eval.task_name`: This affects how the query data is processed. For now I've sidestepped what the original code did, and just defined a "gen" setting that uses the input query text raw as the search query.
+We adapted [lm-evaluation-harnesses](https://github.com/EleutherAI/lm-evaluation-harness) to support RAG evaluation, which we developped in [RAG-evaluation-harnesses](https://github.com/RulinShao/RAG-evaluation-harnesses). We refer to [Downstream Evaluation](#downstream-evaluation) for more details. Below is an example to run evaluation on Natural Questions. 
+
+First, install our RAG evaluation package.
+```bash
+pip install -e rag-evaluation-harness
+```
+
+Then, run search over the task quries.
+```bash
+lm_eval --tasks "nq_open" --inputs_save_dir "examples" --save_inputs_only
+
+PYTHONPATH=.  python ric/main_ric.py --config-name example_config \
+  tasks.eval.task_name=lm-eval \
+  tasks.eval.search=true \
+  evaluation.domain=nq_open \
+  evaluation.data.eval_data=examples/nq_open.jsonl
+```
+
+Finally, evaluate with an LM.
+```bash
+RETRIEVED_FILE=scaling_out/retrieved_results/facebook/contriever-msmarco/fineweb_edu_1m_datastore-256_chunk_size-1of1_shards/top_3/0/nq_open_retrieved_results.jsonl  # where retrieved documents are saved
+lm_eval --model hf \
+  --model_args pretrained="EleutherAI/pythia-1b" \
+  --tasks nq_open \
+  --batch_size auto \
+  --inputs_save_dir examples \
+  --retrieval_file $RETRIEVED_FILE \
+  --concat_k 3 \
+  --num_fewshot 5 \
+  --results_only_save_path scaling_out/nq_open-5shots.jsonl
+```
+The evaluation results will be printed in a table and saved in `scaling_out/nq_open-5shots.jsonl`.
 
 
 
+## Datastore Release
+We release the **data**, **embedding**, and **index** of our MassiveDS datastore, along with its 10% subsampled version for smaller-scale experiments, on HuggingFace:
+
+* **10% Subsampled MassiveDS**: https://huggingface.co/datasets/rulins/MassiveDS-140B
+* **Full MassiveDS**: https://huggingface.co/datasets/rulins/MassiveDS-1.4T
 
 
 
-# Advanced Usage (notes from prior repo)
-*I'm leaving this here for now for reference, since some of it may be informative about other settings I didn't mention above -- but please note that **some of these parameters may no longer work/exist** after the changes that have been made in the current repo.*
+# Advanced Usage
+We provide more details of advanced usage of our database below.
 
 ## Content
 1. [Model Configuration](#model-configuration)
