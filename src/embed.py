@@ -161,6 +161,9 @@ def get_file_partitions(args):
 
     rank = int(os.environ.get("BEAKER_REPLICA_RANK"))
     world_size = int(os.environ.get("BEAKER_REPLICA_COUNT"))
+    
+    print (f"Distributing {len(file_paths)} files into world_size={world_size}")
+
     # Distribute files across processes
     files_per_process = len(file_paths) / world_size
     start_idx = int(rank * files_per_process)
