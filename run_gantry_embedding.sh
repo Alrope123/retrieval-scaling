@@ -27,6 +27,7 @@ gantry run \
     --env-secret AWS_ACCESS_KEY_ID=SEWONM_AWS_ACCESS_KEY_ID \
     --env-secret AWS_SECRET_ACCESS_KEY=SEWONM_AWS_SECRET_ACCESS_KEY \
     --env-secret WANDB_API_KEY=SEWONM_WANDB_API_KEY \
+    --install "pip install necessary dolma" \
     --shared-memory 10GiB \
     --weka oe-data-default:/data \
     --yes \
