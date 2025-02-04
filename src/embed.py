@@ -31,7 +31,7 @@ from src.data import fast_load_jsonl_shard, fast_load_jsonl_shard_full_files
 
 
 def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):
-    if "sentence-transformers" in args.model_name_or_path:
+    if "sentence-transformers" in args.model_name_or_path or "intfloat/e5" in args.model_name_or_path:
         allids, alltext = [], []
         for k, p in tqdm(enumerate(passages)):
             allids.append(p["id"])
