@@ -372,6 +372,30 @@ def build_dense_index(cfg):
     
     all_embedding_paths = get_glob_flex(index_args.passages_embeddings)
     all_embedding_paths = sorted(all_embedding_paths, key=lambda x: int(x.split('/')[-1].split(f'{embedding_args.prefix}')[-1].split('.pkl')[0]))
+
+    # modify the original code to create a single index
+    index = Indexer(index_args.projection_size, index_args.n_subquantizers, index_args.n_bits)
+
+    embedding_paths = all_embedding_paths[shard_start:shard_start+num_files]
+    index_dir = os.path.join(os.path.dirname(embedding_paths[0]), f'index')
+    # index_dir = get_index_dir_and_passage_paths(cfg, index_shard_id, embedding_paths)
+    logging.info(f"Indexing in shard {index_shard_id} for passages: {embedding_paths}")
+    
+    os.makedirs(index_dir, exist_ok=True)
+    index_path = os.path.join(index_dir, f"index.faiss")
+    if index_args.save_or_load_index and os.path.exists(index_path) and not index_args.overwrite:
+        index.deserialize_from(index_dir)
+        pass
+    else:
+        print(f"Indexing passages from files {embedding_paths}")
+        start_time_indexing = time.time()
+        # index encoded embeddings
+        index_encoded_data(index, embedding_paths, index_args.indexing_batch_size)
+        print(f"Indexing time: {time.time()-start_time_indexing:.1f} s.")
+        if index_args.save_or_load_index:
+            index.serialize(index_dir)
+
+    '''
     num_files = index_args.max_files_per_index_shard if index_args.get("max_files_per_index_shard",None) else len(all_embedding_paths)
     start_list = range(0,len(all_embedding_paths),num_files)
     for index_shard_id, shard_start in enumerate(start_list):
@@ -396,7 +420,7 @@ def build_dense_index(cfg):
             print(f"Indexing time: {time.time()-start_time_indexing:.1f} s.")
             if index_args.save_or_load_index:
                 index.serialize(index_dir)
-
+    '''
 
 
 def get_index_passages_and_id_map(cfg, psg_paths):
