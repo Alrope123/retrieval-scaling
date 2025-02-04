@@ -57,7 +57,7 @@ datastore:
     no_fp16: False
     index_type: PQ    # PQ, PQIVF (PQ degrades to flat when n_subquantizers is 0)
     indexing_batch_size: 1000000
-    projection_size: 768
+    projection_size: 1024
     n_subquantizers: 0    # Number of subquantizer used for vector quantization, if 0 flat index is used
     n_bits: 64    # Number of bits per subquantizer
     overwrite: true
