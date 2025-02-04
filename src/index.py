@@ -376,7 +376,7 @@ def build_dense_index(cfg):
     # modify the original code to create a single index
     index = Indexer(index_args.projection_size, index_args.n_subquantizers, index_args.n_bits)
 
-    embedding_paths = all_embedding_paths[shard_start:shard_start+num_files]
+    embedding_paths = all_embedding_paths
     index_dir = os.path.join(os.path.dirname(embedding_paths[0]), f'index')
     # index_dir = get_index_dir_and_passage_paths(cfg, index_shard_id, embedding_paths)
     logging.info(f"Indexing in shard {index_shard_id} for passages: {embedding_paths}")
