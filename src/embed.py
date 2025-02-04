@@ -30,9 +30,9 @@ import contriever.src.normalize_text
 from src.data import fast_load_jsonl_shard, fast_load_jsonl_shard_full_files
 
 def is_sentence_transformers(model_name_or_path):
-    return "sentence-transformers" in args.model_name_or_path or \
-            "intfloat/e5" in args.model_name_or_path or \
-            "Snowflake" in args.model_name_or_path
+    return "sentence-transformers" in model_name_or_path or \
+            "intfloat/e5" in model_name_or_path or \
+            "Snowflake" in model_name_or_path
 
 def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):
     if is_sentence_transformers(args.model_name_or_path):
