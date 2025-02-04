@@ -192,7 +192,7 @@ def generate_passage_embeddings(cfg):
             tokenizer_name_or_path = args.tokenizer if args.get('tokenizer', None) else args.model_name_or_path
             tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
             model = AutoModel.from_pretrained(args.model_name_or_path)
-        elif "sentence-transformers" in args.model_name_or_path:
+        elif "sentence-transformers" in args.model_name_or_path or "intfloat/e5" in args.model_name_or_path:
             tokenizer = None
             model = SentenceTransformer(args.model_name_or_path)
         else:
