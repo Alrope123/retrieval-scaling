@@ -312,6 +312,7 @@ def get_index_dir_and_passage_paths(cfg,index_shard_id, shard_start, num_files):
     embedding_args = cfg.datastore.embedding
     index_args = cfg.datastore.index
 
+    '''
     embedding_paths = get_glob_flex(index_args.passages_embeddings)
     embedding_paths = sorted(embedding_paths, key=lambda x: int(x.split('/')[-1].split(f'{embedding_args.prefix}')[-1].split('.pkl')[0]))  # must sort based on the integer number
     embedding_paths = embedding_paths[shard_start:shard_start+num_files]
@@ -319,9 +320,23 @@ def get_index_dir_and_passage_paths(cfg,index_shard_id, shard_start, num_files):
     
     index_dir_name = f"shard_{index_shard_id}"
     index_dir = os.path.join(os.path.dirname(embedding_paths[0]), f'index/{index_dir_name}')
-    
-    return index_dir, embedding_paths
+    '''
+    # index passages
+    index_shard_ids = index_shard_ids if index_shard_ids is not None else index_args.get('index_shard_ids', None)
+    if index_shard_ids:
+        index_shard_ids = [int(i) for i in index_shard_ids]
+        embedding_paths = [os.path.join(embedding_args.embedding_dir, embedding_args.prefix + f"_{shard_id:02d}.pkl") for shard_id in index_shard_ids]
 
+        # name the index dir with all shard ids included in this index, i.e., one index for multiple passage shards
+        index_dir_name = '_'.join([str(shard_id) for shard_id in index_shard_ids])
+        index_dir = os.path.join(os.path.dirname(embedding_paths[0]), f'index/{index_dir_name}')
+    else:
+        embedding_paths = glob.glob(index_args.passages_embeddings)
+        embedding_paths = sorted(embedding_paths, key=lambda x: int(x.split('/')[-1].split(f'{embedding_args.prefix}_')[-1].split('.pkl')[0]))  # must sort based on the integer number
+        embedding_paths = embedding_paths if index_args.num_subsampled_embedding_files == -1 else embedding_paths[0:index_args.num_subsampled_embedding_files]                                
+        index_dir = os.path.join(os.path.dirname(embedding_paths[0]), f'index')
+                                                    
+    return index_dir, embedding_paths
 
 
 def index_encoded_data(index, embedding_paths, indexing_batch_size):

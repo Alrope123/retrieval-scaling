@@ -63,7 +63,6 @@ datastore:
     overwrite: true
     max_files_per_index_shard: 2
 
-
 evaluation:
   domain: mmlu
   search:
