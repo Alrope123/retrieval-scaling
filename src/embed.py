@@ -29,9 +29,13 @@ import contriever.src.normalize_text
 
 from src.data import fast_load_jsonl_shard, fast_load_jsonl_shard_full_files
 
+def is_sentence_transformers(model_name_or_path):
+    return "sentence-transformers" in args.model_name_or_path or \
+            "intfloat/e5" in args.model_name_or_path or \
+            "Snowflake" in args.model_name_or_path
 
 def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):
-    if "sentence-transformers" in args.model_name_or_path or "intfloat/e5" in args.model_name_or_path:
+    if is_sentence_transformers(args.model_name_or_path):
         allids, alltext = [], []
         for k, p in tqdm(enumerate(passages)):
             allids.append(p["id"])
@@ -192,7 +196,7 @@ def generate_passage_embeddings(cfg):
             tokenizer_name_or_path = args.tokenizer if args.get('tokenizer', None) else args.model_name_or_path
             tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
             model = AutoModel.from_pretrained(args.model_name_or_path)
-        elif "sentence-transformers" in args.model_name_or_path or "intfloat/e5" in args.model_name_or_path:
+        elif is_sentence_transformers(args.model_name_or_path):
             tokenizer = None
             model = SentenceTransformer(args.model_name_or_path)
         else:
