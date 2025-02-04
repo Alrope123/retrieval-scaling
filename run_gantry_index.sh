@@ -8,7 +8,7 @@ gantry run \
     --task-name "Contriever-index" \
     --description "Indexing for dense retrieval" \
     --allow-dirty \
-    --workspace ai2/oe-data \
+    --workspace ai2/ds-olmo \
     --beaker-image 'petew/olmo-torch23-gantry' \
     --timeout -1 \
     --show-logs \
