@@ -9,7 +9,7 @@ from dolma.core.paths import glob_path
 from multiprocessing import Pool
 import smart_open
 
-NUM_SHARDS = 50
+NUM_SHARDS = 20
 
 def count_file(file_name):
     n_docs, n_words = 0, 0
@@ -61,7 +61,7 @@ def main():
     '''
 
     # shard paths
-    out_paths = [[os.path.join(out_dir, str(shard_idx), "dclm-{}.jsonl.gz".format(str(file_idx).zfill(4))) for shard_idx in range(NUM_SHARDS)] for file_idx in range(len(data_paths))]
+    out_paths = [[os.path.join(out_dir, str(shard_idx).zfill(2), "dclm-{}.jsonl.gz".format(str(file_idx).zfill(4))) for shard_idx in range(NUM_SHARDS)] for file_idx in range(len(data_paths))]
     with Pool() as p:
         with tqdm(total=len(data_paths), desc="Processing Files", smoothing=0) as pgr:
             for _ in p.imap_unordered(shard_file, zip(data_paths, out_paths)):
