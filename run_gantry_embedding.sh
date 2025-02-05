@@ -17,7 +17,7 @@ gantry run \
     --priority "${PRIORITY}" \
     --leader-selection \
     --gpus 1 \
-    --replicas 8 \
+    --replicas 32 \
     --preemptible \
     --cluster "${CLUSTER}" \
     --budget ai2/oe-data \
@@ -31,7 +31,7 @@ gantry run \
     --shared-memory 10GiB \
     --weka oe-data-default:/data \
     --yes \
-    -- python -m ric.main_ric --config-name dclm_ft7percentile_fw3_sf tasks.datastore.embedding=true
+    -- python -m ric.main_ric --config-name dclm_ft7percentile_fw3_me5 tasks.datastore.embedding=true
 
 
 
