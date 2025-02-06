@@ -33,7 +33,7 @@ device = 'cuda' if torch.cuda.is_available()  else 'cpu'
 
 def is_sentence_transformers(model_name_or_path):
     return "sentence-transformers" in model_name_or_path or \
-            "intfloat/e5" in model_name_or_path or \
+            "intfloat" in model_name_or_path or \
             "Snowflake" in model_name_or_path
 
 def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):

@@ -50,11 +50,11 @@ device = 'cuda' #if torch.cuda.is_available()  else 'cpu'
 
 def is_sentence_transformers(model_name_or_path):
     return "sentence-transformers" in model_name_or_path or \
-            "intfloat/e5" in model_name_or_path or \
+            "intfloat" in model_name_or_path or \
             "Snowflake" in model_name_or_path
 
 def embed_queries(args, queries, model, tokenizer, model_name_or_path):
-    if "sentence-transformers" in model_name_or_path:
+    if is_sentence_transformers(model_name_or_path):
         all_question = []
         for k, q in enumerate(queries):
             if args.lowercase:
@@ -233,7 +233,7 @@ def search_dense_topk(cfg, query_filepath):
         elif "dragon" in model_name_or_path:
             query_tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
             query_encoder = AutoModel.from_pretrained(model_name_or_path)
-        elif "sentence-transformers" in model_name_or_path:
+        elif is_sentence_transformers(model_name_or_path):
             query_tokenizer = None
             query_encoder = SentenceTransformer(model_name_or_path)
         else:
