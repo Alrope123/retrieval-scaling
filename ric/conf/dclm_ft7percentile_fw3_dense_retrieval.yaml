@@ -85,7 +85,7 @@ evaluation:
     rerank_n_docs: null  # number of documents used for reranking, set to null if not removing any data
     use_saved_dedup_data: false  # reuse the saved dedupped data for efficient subsampling
   data:
-    eval_data: s3://ai2-llm/pretraining-data/sources/reddit/dolma_raw/mmlu_queries/test_queries/mmlu_queries_corr/*.jsonl
+    eval_data: s3://ai2-llm/pretraining-data/sources/ds-olmo-data/oracle_retrieval/mmlu/out/cot_queries.jsonl
     max_eval_data_seq_length: 1024
     eval_stride: 512
     merge: True

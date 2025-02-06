@@ -48,6 +48,10 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 device = 'cuda' if torch.cuda.is_available()  else 'cpu'
 
+def is_sentence_transformers(model_name_or_path):
+    return "sentence-transformers" in model_name_or_path or \
+            "intfloat/e5" in model_name_or_path or \
+            "Snowflake" in model_name_or_path
 
 def embed_queries(args, queries, model, tokenizer, model_name_or_path):
     if "sentence-transformers" in model_name_or_path:
@@ -153,10 +157,14 @@ def add_hasanswer(data, hasanswer):
             d["hasanswer"] = hasanswer[i][k]
 
 
-def get_search_output_path(cfg, query_filepath, index_shard_id):
+def get_search_output_path(cfg, query_filepath, index_shard_id=None):
     eval_args = cfg.evaluation
-    shards_postfix = f"shard_{index_shard_id}"
-    output_dir = os.path.join(eval_args.eval_output_dir, shards_postfix)
+
+    if index_shard_id:
+        shards_postfix = f"shard_{index_shard_id}"
+        output_dir = os.path.join(eval_args.eval_output_dir, shards_postfix)
+    else:
+        output_dir = eval_args.eval_output_dir
     output_path = os.path.join(output_dir, os.path.basename(query_filepath).replace('.jsonl', '_retrieved_results.jsonl'))
     return output_path
 
@@ -266,6 +274,39 @@ def search_dense_topk(cfg, query_filepath):
         all_psg_paths = get_glob_flex(os.path.join(embedding_args.passages_dir,"*.pkl"))
         ptrn = ".*raw_passages_(.*)-(.*)-of-"
         all_psg_paths = sorted(all_psg_paths, key=lambda x: (int(re.match(ptrn,x).group(1)),int(re.match(ptrn,x).group(2))))
+            
+
+        copied_data = copy.deepcopy(data) 
+        output_path = get_search_output_path(cfg, query_filepath)
+
+        # index_dir, _ = get_index_dir_and_passage_paths(cfg)
+        psg_paths = all_psg_paths
+        index_dir = os.path.join(embedding_args.embedding_dir, index)
+        
+        print (f"Loading index from {index_dir}")
+        index = Indexer(index_args.projection_size, index_args.n_subquantizers, index_args.n_bits)
+        index.deserialize_from(index_dir)
+
+        # load passages and id mapping corresponding to the index
+        passages, passage_id_map = get_index_passages_and_id_map(cfg,psg_paths)
+        assert len(passages) == index.index.ntotal, f"number of documents {len(passages)} and number of embeddings {index.index.ntotal} mismatch"
+
+        # get top k results
+        start_time_retrieval = time.time()
+
+        print ("Start searching")
+        top_ids_and_scores = index.search_knn(questions_embedding, eval_args.search.n_docs)
+        logging.info(f"Search time: {time.time()-start_time_retrieval:.1f} s.")
+
+        # todo: double check valid_query_idx
+        logging.info(f"Adding documents to eval data...")
+        add_passages(copied_data, passage_id_map, top_ids_and_scores, valid_query_idx, embedding_args, domain=ds_domain)
+        
+        if "s3://" not in output_path:
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        safe_write_jsonl(copied_data, output_path)
+        
+        '''
         num_files = index_args.max_files_per_index_shard if index_args.get("max_files_per_index_shard",None) else len(all_psg_paths)
         start_list = range(0,len(all_psg_paths),num_files)
         for index_shard_id, shard_start in enumerate(start_list):
@@ -297,7 +338,7 @@ def search_dense_topk(cfg, query_filepath):
             if "s3://" not in output_path:
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
             safe_write_jsonl(copied_data, output_path)
-        
+        '''
     
     post_hoc_merge_topk(cfg,query_filepath)
     # if cfg.evaluation.search.get('merge_multi_source_results', False) and cfg.evaluation.search.get("topk_subsample_p", None):
@@ -834,8 +875,13 @@ def safe_write_jsonl(data, output_file):
 
 def partition_input_filepaths(file_paths):
 
-    rank = int(os.environ.get("BEAKER_REPLICA_RANK"))
-    world_size = int(os.environ.get("BEAKER_REPLICA_COUNT"))
+    try:
+        rank = int(os.environ.get("BEAKER_REPLICA_RANK"))
+        world_size = int(os.environ.get("BEAKER_REPLICA_COUNT"))
+    except Exception:
+        rank = 0
+        world_size = 1
+
     # Distribute files across processes
     files_per_process = len(file_paths) / world_size
     start_idx = int(rank * files_per_process)

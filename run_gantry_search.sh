@@ -6,26 +6,28 @@ export BEAKER_EXPERIMENT_NAME="Contriever-search"
 
 config_name=dclm_ft7percentile_fw3_dense_retrieval 
 
+INPUT_DIR=/data/input/sewonm/retrieval-scaling/examples
 RETRIEVED_FILE=/data/input/sewonm/dense-retrieval/dclm_ft7percentile_fw3_shard00/retrieved_results/facebook/contriever-msmarco/0_datastore-256_chunk_size/top_3/mmlu_retrieved_results.jsonl  # where retrieved documents are saved
 
-command='
-pip install -e rag-evaluation-harness;
-lm_eval --tasks "mmlu" --inputs_save_dir "examples" --save_inputs_only ;
-PYTHONPATH=.  python ric/main_ric.py --config-name $config_name \
+#pip install -e rag-evaluation-harness
+
+#lm_eval --tasks "mmlu" --inputs_save_dir $INPUT_DIR --save_inputs_only
+
+command='PYTHONPATH=.  python ric/main_ric.py --config-name $config_name \
 	tasks.eval.task_name=lm-eval \
 	tasks.eval.search=true \
 	evaluation.domain=mmlu \
-	evaluation.data.eval_data=examples/mmlu.jsonl \
-	evaluation.search.n_docs=3;
+	evaluation.search.n_docs=3'
+
 lm_eval --model hf \
 	--model_args pretrained="meta-llama/Llama-3.1-8B" \
-	--tasks nq_open \
+	--tasks mmlu \
 	--batch_size auto \
-	--inputs_save_dir examples \
+	--inputs_save_dir $INPUT_DIR \
 	--retrieval_file $RETRIEVED_FILE \
 	--concat_k 3 \
 	--num_fewshot 5 \
-	--results_only_save_path out/nq_open-5shots.jsonl'
+	--results_only_save_path out/mmlu_contriever_llama8B_top3_5shot.jsonl
 
 gantry run \
     --task-name "Contriever-search" \
