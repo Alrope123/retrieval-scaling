@@ -307,42 +307,11 @@ def search_dense_topk(cfg, query_filepath):
         if "s3://" not in output_path:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
         safe_write_jsonl(copied_data, output_path)
-        
-        '''
-        num_files = index_args.max_files_per_index_shard if index_args.get("max_files_per_index_shard",None) else len(all_psg_paths)
-        start_list = range(0,len(all_psg_paths),num_files)
-        for index_shard_id, shard_start in enumerate(start_list):
-            copied_data = copy.deepcopy(data) 
-
-            output_path = get_search_output_path(cfg, query_filepath, index_shard_id)
-
-            # index_dir, _ = get_index_dir_and_passage_paths(cfg)
-            psg_paths = all_psg_paths[shard_start:shard_start+num_files]
-            index_dir = os.path.join(embedding_args.embedding_dir, f'index/shard_{index_shard_id}')
-            index = Indexer(index_args.projection_size, index_args.n_subquantizers, index_args.n_bits)
-            index.deserialize_from(index_dir)
-
-
-            # load passages and id mapping corresponding to the index
-            passages, passage_id_map = get_index_passages_and_id_map(cfg,psg_paths)
-            assert len(passages) == index.index.ntotal, f"number of documents {len(passages)} and number of embeddings {index.index.ntotal} mismatch"
-
-            # get top k results
-            start_time_retrieval = time.time()
-
-            top_ids_and_scores = index.search_knn(questions_embedding, eval_args.search.n_docs)
-            logging.info(f"Search time: {time.time()-start_time_retrieval:.1f} s.")
-
-            # todo: double check valid_query_idx
-            logging.info(f"Adding documents to eval data...")
-            add_passages(copied_data, passage_id_map, top_ids_and_scores, valid_query_idx, embedding_args, domain=ds_domain)
-            
-            if "s3://" not in output_path:
-                os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            safe_write_jsonl(copied_data, output_path)
-        '''
     
-    post_hoc_merge_topk(cfg,query_filepath)
+    # this is not needed as we have one index
+
+    #post_hoc_merge_topk(cfg,query_filepath)
+    
     # if cfg.evaluation.search.get('merge_multi_source_results', False) and cfg.evaluation.search.get("topk_subsample_p", None):
     #     post_hoc_merge_topk_multi_domain(cfg)
 

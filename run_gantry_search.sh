@@ -5,26 +5,14 @@ PRIORITY="high"
 export BEAKER_EXPERIMENT_NAME="Contriever-search"
 
 config_name=dclm_ft7percentile_fw3_dense_retrieval 
+#config_name=dclm_ft7percentile_fw3_gtr
+#config_name=dclm_ft7percentile_fw3_e5
+#config_name=dclm_ft7percentile_fw3_sf
 
 INPUT_DIR=/data/input/sewonm/retrieval-scaling/examples
-RETRIEVED_FILE=/data/input/sewonm/dense-retrieval/dclm_ft7percentile_fw3_shard00/retrieved_results/facebook/contriever-msmarco/0_datastore-256_chunk_size/top_3/mmlu_retrieved_results.jsonl  # where retrieved documents are saved
-
-#pip install -e rag-evaluation-harness
-
-#lm_eval --tasks "mmlu" --inputs_save_dir $INPUT_DIR --save_inputs_only
+RETRIEVED_FILE=/data/input/sewonm/dense-retrieval/dclm_ft7percentile_fw3_shard00/retrieved_results/facebook/contriever-msmarco/0_datastore-256_chunk_size/top_5/cot_queries_retrieved_results.jsonl
 
 command="python -m ric.main_ric --config-name $config_name tasks.eval.task_name=lm-eval tasks.eval.search=true"
-
-
-#lm_eval --model hf \
-#	--model_args pretrained="meta-llama/Llama-3.1-8B" \
-#	--tasks mmlu \
-#	--batch_size auto \
-#	--inputs_save_dir $INPUT_DIR \
-#	--retrieval_file $RETRIEVED_FILE \
-#	--concat_k 3 \
-#	--num_fewshot 5 \
-#	--results_only_save_path out/mmlu_contriever_llama8B_top3_5shot.jsonl
 
 gantry run \
     --task-name "Contriever-search" \

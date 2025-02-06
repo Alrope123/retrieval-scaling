@@ -141,6 +141,9 @@ def load_embeds(embed_path, dstore_size, dimension, dtype):
                      shape=(dstore_size, dimension))
 
 
+'''
+This is suitable for a very large datastore where loading embeddings at once is not possible
+'''
 class IndexPQIVF(object):
     def __init__(self,
                  embed_path,
@@ -340,6 +343,10 @@ def get_index_dir_and_passage_paths(cfg,index_shard_id, shard_start, num_files):
 
 
 def index_encoded_data(index, embedding_paths, indexing_batch_size):
+    '''
+    this uses `add_embeddings`, which index `indexing_batch_size` number of embeddings
+    and return the rest
+    '''
     allids = []
     allembeddings = np.array([])
 
