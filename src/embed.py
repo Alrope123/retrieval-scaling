@@ -30,8 +30,6 @@ import contriever.src.normalize_text
 from src.data import fast_load_jsonl_shard, fast_load_jsonl_shard_full_files
 
 device = 'cuda' if torch.cuda.is_available()  else 'cpu'
-print (device)
-exit()
 
 def is_sentence_transformers(model_name_or_path):
     return "sentence-transformers" in model_name_or_path or \
