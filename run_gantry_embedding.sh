@@ -9,7 +9,7 @@ gantry run \
     --description "Embed docs for dense retrieval" \
     --allow-dirty \
     --workspace ai2/ds-olmo \
-    --beaker-image 'petew/olmo-torch23-gantry' \
+    --beaker-image 'lucas/refine1' \
     --timeout -1 \
     --show-logs \
     --host-networking \
@@ -31,7 +31,11 @@ gantry run \
     --shared-memory 10GiB \
     --weka oe-data-default:/data \
     --yes \
-    -- python -m ric.main_ric --config-name dclm_ft7percentile_fw3_me5 tasks.datastore.embedding=true
+    -- python -c "import torch; print (torch.cuda.is_available())"   
 
 
+#python -m ric.main_ric --config-name dclm_ft7percentile_fw3_me5 tasks.datastore.embedding=true
 
+
+#    --beaker-image 'petew/olmo-torch23-gantry' \
+ 
