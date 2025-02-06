@@ -50,6 +50,7 @@ gantry run \
     --env-secret AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY \
     --env-secret WANDB_API_KEY=WANDB_API_KEY \
     --env-secret HF_TOKEN=SEWONM_HF_TOKEN \
+    --install "pip install necessary" \
     --shared-memory 10GiB \
     --weka oe-data-default:/data \
     --yes \
