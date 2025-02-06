@@ -10,7 +10,6 @@ dependencies:
     - tqdm
     - transformers
     - sentence_transformers
-    - pyserini
     - datasketch
     - boto3
     - smart_open

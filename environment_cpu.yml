@@ -17,5 +17,4 @@ dependencies:
     - tqdm
     - transformers
     - sentence_transformers
-    - pyserini
     - datasketch

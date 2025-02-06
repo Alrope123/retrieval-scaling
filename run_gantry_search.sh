@@ -1,5 +1,5 @@
 
-CLUSTER="ai2/jupiter*,ai2/saturn*,ai2/neptune*"
+CLUSTER="ai2/jupiter*"
 PRIORITY="high"
 
 export BEAKER_EXPERIMENT_NAME="Contriever-search"
@@ -13,21 +13,21 @@ RETRIEVED_FILE=/data/input/sewonm/dense-retrieval/dclm_ft7percentile_fw3_shard00
 
 #lm_eval --tasks "mmlu" --inputs_save_dir $INPUT_DIR --save_inputs_only
 
-command='PYTHONPATH=.  python ric/main_ric.py --config-name $config_name \
+command='python -m ric.main_ric --config-name $config_name \
 	tasks.eval.task_name=lm-eval \
 	tasks.eval.search=true \
 	evaluation.domain=mmlu \
 	evaluation.search.n_docs=3'
 
-lm_eval --model hf \
-	--model_args pretrained="meta-llama/Llama-3.1-8B" \
-	--tasks mmlu \
-	--batch_size auto \
-	--inputs_save_dir $INPUT_DIR \
-	--retrieval_file $RETRIEVED_FILE \
-	--concat_k 3 \
-	--num_fewshot 5 \
-	--results_only_save_path out/mmlu_contriever_llama8B_top3_5shot.jsonl
+#lm_eval --model hf \
+#	--model_args pretrained="meta-llama/Llama-3.1-8B" \
+#	--tasks mmlu \
+#	--batch_size auto \
+#	--inputs_save_dir $INPUT_DIR \
+#	--retrieval_file $RETRIEVED_FILE \
+#	--concat_k 3 \
+#	--num_fewshot 5 \
+#	--results_only_save_path out/mmlu_contriever_llama8B_top3_5shot.jsonl
 
 gantry run \
     --task-name "Contriever-search" \
