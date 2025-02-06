@@ -46,7 +46,7 @@ except:
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
-device = 'cuda' if torch.cuda.is_available()  else 'cpu'
+device = 'cuda' #if torch.cuda.is_available()  else 'cpu'
 
 def is_sentence_transformers(model_name_or_path):
     return "sentence-transformers" in model_name_or_path or \
