@@ -16,7 +16,7 @@ gantry run \
     --venv 'base' \
     --priority "${PRIORITY}" \
     --leader-selection \
-    --gpus 1 \
+    --gpus 8 \
     --replicas 1 \
     --preemptible \
     --cluster "${CLUSTER}" \

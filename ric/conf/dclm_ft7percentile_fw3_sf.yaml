@@ -68,7 +68,7 @@ datastore:
 evaluation:
   domain: mmlu
   search:
-    n_docs: 5
+    n_docs: 100
     per_gpu_batch_size: 64    # Batch size for query encoding
     question_maxlength: 512    # Maximum number of tokens in a question
     lowercase: False
