@@ -266,6 +266,8 @@ def search_dense_topk(cfg, query_filepath):
             with open(eval_args.search.query_embedding_save_path, 'rb') as fin:
                 questions_embedding = pkl.load(fin)
         else:
+            print (query_encoder)
+            print (device)
             questions_embedding = embed_queries(eval_args.search, queries, query_encoder, query_tokenizer, model_name_or_path)
         if eval_args.search.get('cache_query_embedding_only', False):
             return

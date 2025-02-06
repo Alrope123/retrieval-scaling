@@ -13,11 +13,8 @@ RETRIEVED_FILE=/data/input/sewonm/dense-retrieval/dclm_ft7percentile_fw3_shard00
 
 #lm_eval --tasks "mmlu" --inputs_save_dir $INPUT_DIR --save_inputs_only
 
-command='python -m ric.main_ric --config-name $config_name \
-	tasks.eval.task_name=lm-eval \
-	tasks.eval.search=true \
-	evaluation.domain=mmlu \
-	evaluation.search.n_docs=3'
+command="python -m ric.main_ric --config-name $config_name tasks.eval.task_name=lm-eval tasks.eval.search=true"
+
 
 #lm_eval --model hf \
 #	--model_args pretrained="meta-llama/Llama-3.1-8B" \
@@ -52,6 +49,7 @@ gantry run \
     --env-secret AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID \
     --env-secret AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY \
     --env-secret WANDB_API_KEY=WANDB_API_KEY \
+    --env-secret HF_TOKEN=SEWONM_HF_TOKEN \
     --shared-memory 10GiB \
     --weka oe-data-default:/data \
     --yes \
