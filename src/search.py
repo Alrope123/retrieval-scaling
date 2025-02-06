@@ -283,7 +283,7 @@ def search_dense_topk(cfg, query_filepath):
 
         # index_dir, _ = get_index_dir_and_passage_paths(cfg)
         psg_paths = all_psg_paths
-        index_dir = os.path.join(embedding_args.embedding_dir, index)
+        index_dir = os.path.join(embedding_args.embedding_dir, 'index')
         
         print (f"Loading index from {index_dir}")
         index = Indexer(index_args.projection_size, index_args.n_subquantizers, index_args.n_bits)
