@@ -31,7 +31,7 @@ gantry run \
     --shared-memory 10GiB \
     --weka oe-data-default:/data \
     --yes \
-    -- python -m ric.main_ric --config-name c4_dense_retrieval tasks.datastore.embedding=true
+    -- python -m ric.main_ric --config-name dclm_ft7percentile_fw3_full_dense_retrieval tasks.datastore.embedding=true
 
 
 #    --beaker-image 'petew/olmo-torch23-gantry' \
