@@ -47,6 +47,17 @@ def main_lb():
     data_paths = list(glob_path(base_path))
     print (len(data_paths))
     
+    n_docs, n_words = 0, 0
+    with Pool() as p:
+        with tqdm(total=len(data_paths), desc="Processing Files", smoothing=0) as pgr:
+            for _n_docs, _n_words in p.imap_unordered(count_file, data_paths):
+                n_docs += _n_docs
+                n_words += _n_words
+                pgr.update(1)
+    print (n_docs, n_words)
+    return
+
+
     out_dir = "s3://ai2-lucas-archival/pretraining-data/sources/libgen/lb_v1p0_uniformly_sharded"
     out_paths = [[os.path.join(out_dir, str(shard_idx).zfill(2), "lb_v1p0-{}.jsonl.gz".format(str(file_idx).zfill(4))) for shard_idx in range(NUM_SHARDS)] for file_idx in range(len(data_paths))]
     with Pool() as p:

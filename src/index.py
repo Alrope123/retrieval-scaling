@@ -112,6 +112,8 @@ class Indexer(object):
         faiss.write_index(self.index, index_file)
         with open(meta_file, mode='wb') as f:
             pickle.dump(self.index_id_to_db_id, f)
+    
+        print (f"Saved index with {self.index.ntotal} passages")
 
     def deserialize_from(self, dir_path):
         index_file = os.path.join(dir_path, 'index.faiss')
