@@ -13,21 +13,20 @@ tasks:
 model:
   sparse_retriever: null  # choices: null, bm25
   
-  datastore_tokenizer: facebook/contriever-msmarco
-  query_tokenizer: facebook/contriever-msmarco
-  query_encoder: facebook/contriever-msmarco
-  datastore_encoder: facebook/contriever-msmarco
+  datastore_tokenizer: Snowflake/snowflake-arctic-embed-l-v2.0
+  query_tokenizer: Snowflake/snowflake-arctic-embed-l-v2.0
+  query_encoder: Snowflake/snowflake-arctic-embed-l-v2.0
+  datastore_encoder: Snowflake/snowflake-arctic-embed-l-v2.0
   lm_model: meta-llama/Llama-3.1-8B    # LM for evaluation
 
-
 datastore:
-  domain: dclm_ft7percentile_fw3_shard00
-  raw_data_path: s3://ai2-llm/pretraining-data/sources/ds-olmo-data/dclm_ft7percentile_fw3/00/
+  domain: lb_full
+  raw_data_path: s3://ai2-lucas-archival/pretraining-data/sources/libgen/lb_v1p0
   chunk_size: 256  # chunk size in number of words
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /data/sewonm/dense-retrieval/dclm_ft7percentile_fw3_shard00
+    output_dir: /data/sewonm/dense-retrieval/lb_full
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}
