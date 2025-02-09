@@ -135,7 +135,7 @@ def get_file_paths_and_sizes(args):
     if "s3://" in args.raw_data_path:
         from src.utils_paths import glob_path
         file_paths = sorted(
-                list(glob_path(os.path.join(args.raw_data_path, "*.jsonl.gz")))
+                list(glob_path(os.path.join(args.raw_data_path, "*.gz")))
         )
         print (args.raw_data_path)
 
