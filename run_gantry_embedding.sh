@@ -16,8 +16,8 @@ gantry run \
     --venv 'base' \
     --priority "${PRIORITY}" \
     --leader-selection \
-    --gpus 8 \
-    --replicas 1 \
+    --gpus 1 \
+    --replicas 8 \
     --preemptible \
     --cluster "${CLUSTER}" \
     --budget ai2/oe-data \
@@ -31,7 +31,7 @@ gantry run \
     --shared-memory 10GiB \
     --weka oe-data-default:/data \
     --yes \
-    -- python -m ric.main_ric --config-name dclm_ft7percentile_fw3_me5 tasks.datastore.embedding=true
+    -- python -m ric.main_ric --config-name lb_dense_retrieval tasks.datastore.embedding=true
 
 
 #    --beaker-image 'petew/olmo-torch23-gantry' \
