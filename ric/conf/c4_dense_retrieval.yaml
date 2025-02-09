@@ -22,7 +22,7 @@ model:
 
 datastore:
   domain: ai2_c4
-  raw_data_path: s3://ai2-llm/pretraining-data/sources/c4/v0-c4-cleaned/documents 
+  raw_data_path: s3://ai2-llm/pretraining-data/sources/c4/raw/en/train
   chunk_size: 256  # chunk size in number of words
   
   embedding:
