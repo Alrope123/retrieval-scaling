@@ -43,7 +43,9 @@ def main():
     main_lb()
 
 def main_lb():
-    base_path = "s3://ai2-lucas-archival/pretraining-data/sources/libgen/lb_v1p0"
+    #base_path = "s3://ai2-lucas-archival/pretraining-data/sources/libgen/lb_v1p0"
+    base_path = "s3://ai2-llm/pretraining-data/sources/c4/raw/en/train/"
+
     data_paths = list(glob_path(base_path))
     print (len(data_paths))
     
