@@ -301,6 +301,7 @@ def add_embeddings(index, embeddings, ids, indexing_batch_size, id_offset=0):
     ids = ids[end_idx:]
     embeddings = embeddings[end_idx:]
     index.index_data(ids_toadd, embeddings_toadd)
+    del embeddings_toadd
     return embeddings, ids
 
 def get_glob_flex(glob_input):
