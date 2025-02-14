@@ -18,6 +18,7 @@ gantry run \
     --leader-selection \
     --gpus 0 \
     --replicas 1 \
+    --memory 1500GiB \
     --preemptible \
     --cluster "${CLUSTER}" \
     --budget ai2/oe-data \
@@ -30,4 +31,4 @@ gantry run \
     --shared-memory 10GiB \
     --weka oe-data-default:/data \
     --yes \
-    -- python -m ric.main_ric --config-name lb_dense_retrieval tasks.datastore.index=true
+    -- python -m ric.main_ric --config-name dclm_ft7percentile_fw3_full_dense_retrieval tasks.datastore.index=true

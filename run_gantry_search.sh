@@ -7,10 +7,10 @@ export BEAKER_EXPERIMENT_NAME="Contriever-search"
 #config_name=dclm_ft7percentile_fw3_dense_retrieval 
 #config_name=dclm_ft7percentile_fw3_gtr
 #config_name=dclm_ft7percentile_fw3_e5
-config_name=dclm_ft7percentile_fw3_sf
+#config_name=dclm_ft7percentile_fw3_sf
+#config_name=lb_dense_retrieval
+config_name=c4_dense_retrieval
 
-INPUT_DIR=/data/input/sewonm/retrieval-scaling/examples
-RETRIEVED_FILE=/data/input/sewonm/dense-retrieval/dclm_ft7percentile_fw3_shard00/retrieved_results/facebook/contriever-msmarco/0_datastore-256_chunk_size/top_5/cot_queries_retrieved_results.jsonl
 
 command="python -m ric.main_ric --config-name $config_name tasks.eval.task_name=lm-eval tasks.eval.search=true"
 

@@ -5,7 +5,7 @@ PRIORITY="high"
 export BEAKER_EXPERIMENT_NAME="Contriever-embedding"
 
 gantry run \
-    --task-name "Contriever-embedding" \
+    --task-name "Contriever-embedding $1" \
     --description "Embed docs for dense retrieval" \
     --allow-dirty \
     --workspace ai2/ds-olmo \
@@ -31,7 +31,7 @@ gantry run \
     --shared-memory 10GiB \
     --weka oe-data-default:/data \
     --yes \
-    -- python -m ric.main_ric --config-name dclm_ft7percentile_fw3_full_dense_retrieval tasks.datastore.embedding=true
+    -- python -m ric.main_ric --config-name $1_dense_retrieval tasks.datastore.embedding=true
 
 
 #    --beaker-image 'petew/olmo-torch23-gantry' \
