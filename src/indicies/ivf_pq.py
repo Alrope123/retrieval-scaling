@@ -178,7 +178,7 @@ class IVFPQIndexer(object):
         
         start_time = time.time()
         # NOTE: the shard id is a absolute id defined in the name
-        for embed_path in self.embed_paths:
+        for shard_id, embed_path in enumerate(self.embed_paths):
             '''
             filename = os.path.basename(embed_path)
             match = re.search(r"passages(\d+)\.pkl", filename)
