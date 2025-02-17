@@ -13,10 +13,9 @@ def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None):
 
     # index passages
     index_shard_ids = index_shard_ids if index_shard_ids is not None else index_args.get('index_shard_ids', None)
-    # sort to make it invariant to order
-    index_shard_ids = sorted(index_shard_ids)
+    
     if index_shard_ids:
-        index_shard_ids = [int(i) for i in index_shard_ids]
+        index_shard_ids = [int(i) for i in sorted(index_shard_ids)]
         embedding_paths = [os.path.join(embedding_args.embedding_dir, embedding_args.prefix + f"_{shard_id:02d}.pkl")
                        for shard_id in index_shard_ids]
 
