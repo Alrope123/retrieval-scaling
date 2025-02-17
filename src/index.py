@@ -243,7 +243,7 @@ class IndexPQIVF(object):
                                            self.dimension,
                                            self.ncentroids,
                                            self.code_size,
-                                           8)
+                                           8)  # 8 specifies that each sub-vector is encoded as 8 bits
         elif self.index_type == "pq":
             print("Building index with PQ")
             start_index = faiss.IndexPQ(self.dimension,
@@ -439,6 +439,8 @@ def get_index_passages_and_id_map(cfg, psg_paths):
     passages = []
     passage_id_map = {}
     offset = 0
+    
+    '''
     for psg_filepath in psg_paths:
             print(psg_filepath)
             shard_passages = fast_load_jsonl(psg_filepath)
@@ -447,6 +449,14 @@ def get_index_passages_and_id_map(cfg, psg_paths):
             offset += len(shard_passages)
             passages.extend(shard_passages)
             passage_id_map = {**passage_id_map, **shard_id_map}
+    '''
+    for shard_id in index_shard_ids:
+        shard_passages = fast_load_jsonl_shard(cfg.datastore.embedding, shard_id, return_all_passages=True)
+        shard_id_map = {str(x["id"]+offset): x for x in shard_passages}
+        
+        offset += len(shard_passages)
+        passages.extend(shard_passages)
+        passage_id_map = {**passage_id_map, **shard_id_map}
         
     return passages, passage_id_map
 

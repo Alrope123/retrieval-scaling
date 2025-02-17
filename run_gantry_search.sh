@@ -9,14 +9,14 @@ export BEAKER_EXPERIMENT_NAME="Contriever-search"
 #config_name=dclm_ft7percentile_fw3_e5
 #config_name=dclm_ft7percentile_fw3_sf
 #config_name=lb_dense_retrieval
-config_name=c4_dense_retrieval
+#config_name=c4_dense_retrieval
 
 
-command="python -m ric.main_ric --config-name $config_name tasks.eval.task_name=lm-eval tasks.eval.search=true"
+command="python -m ric.main_ric --config-name $1_dense_retrieval tasks.eval.task_name=lm-eval tasks.eval.search=true"
 
 gantry run \
-    --task-name "Contriever-search" \
-    --description "Search for dense retrieval" \
+    --task-name "Contriever-search-$1" \
+    --description "Search for dense retrieval $1" \
     --allow-dirty \
     --workspace ai2/ds-olmo \
     --beaker-image 'petew/olmo-torch23-gantry' \

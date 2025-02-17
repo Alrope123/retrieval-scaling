@@ -5,8 +5,8 @@ PRIORITY="high"
 export BEAKER_EXPERIMENT_NAME="Contriever-embedding"
 
 gantry run \
-    --task-name "Contriever-embedding $1" \
-    --description "Embed docs for dense retrieval" \
+    --task-name "Contriever-embedding-$1" \
+    --description "Embed docs for dense retrieval $1" \
     --allow-dirty \
     --workspace ai2/ds-olmo \
     --beaker-image 'lucas/refine1' \

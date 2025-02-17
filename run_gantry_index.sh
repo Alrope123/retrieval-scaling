@@ -5,8 +5,8 @@ PRIORITY="high"
 export BEAKER_EXPERIMENT_NAME="Contriever-index"
 
 gantry run \
-    --task-name "Contriever-index" \
-    --description "Indexing for dense retrieval" \
+    --task-name "Contriever-index-$1" \
+    --description "Indexing for dense retrieval $1" \
     --allow-dirty \
     --workspace ai2/ds-olmo \
     --beaker-image 'petew/olmo-torch23-gantry' \
@@ -18,7 +18,6 @@ gantry run \
     --leader-selection \
     --gpus 0 \
     --replicas 1 \
-    --memory 1500GiB \
     --preemptible \
     --cluster "${CLUSTER}" \
     --budget ai2/oe-data \
@@ -31,4 +30,4 @@ gantry run \
     --shared-memory 10GiB \
     --weka oe-data-default:/data \
     --yes \
-    -- python -m ric.main_ric --config-name dclm_ft7percentile_fw3_full_dense_retrieval tasks.datastore.index=true
+    -- python -m ric.main_ric --config-name $1_dense_retrieval tasks.datastore.index=true
