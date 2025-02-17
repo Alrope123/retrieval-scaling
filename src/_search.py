@@ -257,7 +257,7 @@ def search_dense_topk(cfg):
         
         # load eval data
         data = load_eval_data(cfg)
-        
+
         queries = []
         valid_query_idx = []
         for idx, ex in enumerate(data):

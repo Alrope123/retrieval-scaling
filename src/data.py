@@ -338,10 +338,10 @@ def split_data_into_chunks(text, chunk_sz, min_chunk_sz, keep_last, chunking_str
 
 
 ############################## Evaluation ##############################
-def load_eval_data(cfg, data_filepath):
-    # path = cfg.evaluation.data.eval_data
+def load_eval_data(cfg):
+    path = cfg.evaluation.data.eval_data
     task_name = cfg.tasks.eval.task_name
-    
+                    
     # use lm_tokenizer to make sure the number of tokens consitent with the ones for PPL computation
     tokenizer = transformers.AutoTokenizer.from_pretrained(cfg.model.lm_model)
 

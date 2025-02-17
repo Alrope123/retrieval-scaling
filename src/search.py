@@ -246,7 +246,7 @@ def search_dense_topk(cfg, query_filepath):
             query_encoder = query_encoder.half()
         
         # load eval data
-        data = load_eval_data(cfg,query_filepath)
+        data = load_eval_data(cfg, query_filepath)
         
         # if eval_args.data.num_eval_samples is not None:
         #     random.seed(eval_args.data.seed)
