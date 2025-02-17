@@ -394,7 +394,7 @@ def build_dense_index(cfg):
     
     os.makedirs(index_dir, exist_ok=True)
     index_path = os.path.join(index_dir, f"index.faiss")
-    if index_args.save_or_load_index and os.path.exists(index_path) and not index_args.overwrite:
+    if False: #index_args.save_or_load_index and os.path.exists(index_path) and not index_args.overwrite:
         index.deserialize_from(index_dir)
         pass
     else:
