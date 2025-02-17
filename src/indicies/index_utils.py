@@ -77,7 +77,14 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
     if os.path.isdir(passage_dir):
         filenames = os.listdir(passage_dir)
         jsonl_files = [filename for filename in filenames if '.jsonl' in filename]
-        jsonl_files = sorted(jsonl_files)
+        
+        # raw_passages_{i}-{j}-of-{tot}.jsonl
+        jsonl_files = sorted(
+            jsonl_files,
+            key=lambda x: (int(x.split('_')[-1].split("-")[0]), int(x.split("-of-")[0].split("-")[-1]))
+        )
+
+
         print(f"Converting passages to JSONL data format: {passage_dir}")
         
         pos_id_map = {}
