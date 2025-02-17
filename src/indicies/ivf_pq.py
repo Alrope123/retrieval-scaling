@@ -213,6 +213,9 @@ class IVFPQIndexer(object):
         return psg_pos_id_map
     
     def _id2psg(self, shard_id, chunk_id):
+        print (shard_id, chunk_id)
+        print (len(self.psg_pos_id_map))
+        print (len(self.psg_pos_id_map[shard_id]))
         filename, position = self.psg_pos_id_map[shard_id][chunk_id]
         with open(filename, 'r') as file:
             file.seek(position)
