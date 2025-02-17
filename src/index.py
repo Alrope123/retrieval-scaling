@@ -339,6 +339,8 @@ def get_index_dir_and_passage_paths(cfg,index_shard_id, shard_start, num_files):
     else:
         embedding_paths = glob.glob(index_args.passages_embeddings)
         embedding_paths = sorted(embedding_paths, key=lambda x: int(x.split('/')[-1].split(f'{embedding_args.prefix}_')[-1].split('.pkl')[0]))  # must sort based on the integer number
+        print (embedding_args.prefix)
+        print (embedding_paths)
         embedding_paths = embedding_paths if index_args.num_subsampled_embedding_files == -1 else embedding_paths[0:index_args.num_subsampled_embedding_files]                                
         index_dir = os.path.join(os.path.dirname(embedding_paths[0]), f'index')
                                                     
