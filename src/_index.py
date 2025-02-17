@@ -44,6 +44,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 device = 'cuda' if torch.cuda.is_available()  else 'cpu'
 
 def build_dense_index(cfg):
+    '''
     index_args = cfg.datastore.index
 
     if isinstance(index_args.index_shard_ids[0], ListConfig):
@@ -55,7 +56,8 @@ def build_dense_index(cfg):
     
     for index_shard_ids in index_shard_ids_list:
         index = Indexer(cfg)
-
+    '''
+    index = Indexer(cfg)
 
 def get_index_passages_and_id_map(cfg, index_shard_ids=None):
     index_args = cfg.datastore.index

@@ -54,16 +54,18 @@ datastore:
     chunk_size: ${datastore.chunk_size}
     passages_embeddings: ${datastore.embedding.embedding_dir}/*.pkl
     num_subsampled_embedding_files: -1    # Number of subsampled embeddings, use all if pass -1, not supported yet, assume use all embeddings in the dir
+    index_shard_ids: null
     save_or_load_index: True
     no_fp16: False
-    index_type: PQ    # PQ, PQIVF (PQ degrades to flat when n_subquantizers is 0)
+    index_type: IVFPQ
+    sample_train_size: 100000
     indexing_batch_size: 1000000
     projection_size: 768
-    n_subquantizers: 0    # Number of subquantizer used for vector quantization, if 0 flat index is used
-    n_bits: 64    # Number of bits per subquantizer
-    overwrite: true
-    max_files_per_index_shard: 2
-
+    probe: 8
+    ncentroids: 2048 # 4096 in silo 
+    n_subquantizers: 16 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
+    n_bits: 8    # Number of bits per subquantizer, introducing compression rate of embedding_precision / n_bits
+    overwrite: false
 
 evaluation:
   domain: mmlu
