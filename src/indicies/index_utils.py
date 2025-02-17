@@ -26,10 +26,6 @@ def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None):
     else:
         embedding_paths = glob.glob(index_args.passages_embeddings)
         embedding_paths = sorted(embedding_paths, key=lambda x: int(x.split('/')[-1].split(f'{embedding_args.prefix}')[-1].split('.pkl')[0]))
-        
-        print (embedding_paths[0].split('/')[-1].split(f'{embedding_args.prefix}')[-1])
-        print (embedding_paths[0].split('/')[-1].split(f'{embedding_args.prefix}')[-1].split('.pkl')[0])
-
         # embedding_paths = sorted(embedding_paths, key=lambda x: int(x.split('/')[-1].split(f'{embedding_args.prefix}_')[-1].split('.pkl')[0]))  # must sort based on the integer number
         embedding_paths = embedding_paths if index_args.num_subsampled_embedding_files == -1 else embedding_paths[0:index_args.num_subsampled_embedding_files]
         
@@ -81,13 +77,14 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
     if os.path.isdir(passage_dir):
         filenames = os.listdir(passage_dir)
         jsonl_files = [filename for filename in filenames if '.jsonl' in filename]
+        jsonl_files = sorted(jsonl_files)
         print(f"Converting passages to JSONL data format: {passage_dir}")
         
         pos_id_map = {}
         print(f"Generating id2pos for {passage_dir}")
-        for filename in tqdm(jsonl_files):
-            match = re.match(r"raw_passages-(\d+)-of-\d+\.jsonl", filename)
-            shard_id = int(match.group(1))
+        for shard_id, filename in enumerate(tqdm(jsonl_files)):
+            #match = re.match(r"raw_passages-(\d+)-of-\d+\.jsonl", filename)
+            #shard_id = int(match.group(1))
             file_path = os.path.join(passage_dir, filename)
             
             file_pos_id_map = {}
