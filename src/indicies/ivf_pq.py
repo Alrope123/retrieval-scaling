@@ -178,7 +178,7 @@ class IVFPQIndexer(object):
         # NOTE: the shard id is a absolute id defined in the name
         for embed_path in self.embed_paths:
             filename = os.path.basename(embed_path)
-            match = re.search(r"passages_(\d+)\.pkl", filename)
+            match = re.search(r"passages(\d+)\.pkl", filename)
             shard_id = int(match.group(1))
                 
             to_add = self.get_embs(shard_id=shard_id).copy()
