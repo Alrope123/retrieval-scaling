@@ -143,10 +143,13 @@ def add_hasanswer(data, hasanswer):
             d["hasanswer"] = hasanswer[i][k]
 
 
-def get_search_output_path(cfg, index_shard_ids):
+def get_search_output_path(cfg, index_shard_ids=None):
     eval_args = cfg.evaluation
-    shards_postfix = '_'.join([str(shard_id) for shard_id in index_shard_ids])
-    output_dir = os.path.join(eval_args.eval_output_dir, shards_postfix)
+    if index_shard_ids:
+        shards_postfix = '_'.join([str(shard_id) for shard_id in index_shard_ids])
+        output_dir = os.path.join(eval_args.eval_output_dir, shards_postfix)
+    else:
+        output_dir = eval_args.eval_output_dir
     output_path = os.path.join(output_dir, os.path.basename(eval_args.data.eval_data).replace('.jsonl', '_retrieved_results.jsonl'))
     return output_path
 
@@ -204,24 +207,33 @@ def search_dense_topk(cfg):
     index_args = cfg.datastore.index
     eval_args = cfg.evaluation
     ds_domain = cfg.datastore.domain
+   
+    do_search = True
 
-    if isinstance(index_args.index_shard_ids[0], ListConfig):
-        print(f"Multi-index mode: building {len(index_args.index_shard_ids)} index for {index_args.index_shard_ids} sequentially...")
-        index_shard_ids_list = index_args.index_shard_ids
-    else:
-        print(f"Single-index mode: building a single index over {index_args.index_shard_ids} shards...")
-        index_shard_ids_list = [index_args.index_shard_ids]
+    if index_args.index_shard_ids:
 
-    all_exist = True
-    for index_shard_ids in index_shard_ids_list:
-        # check if all search results exist
-        output_path = get_search_output_path(cfg, index_shard_ids)
-        all_exist = all_exist and os.path.exists(output_path)
-    
-    if all_exist and not eval_args.search.overwrite:
-        logging.info(f'All search results for {index_args.index_shard_ids} exist, skipping searching.')
-    
+        if isinstance(index_args.index_shard_ids[0], ListConfig):
+            print(f"Multi-index mode: building {len(index_args.index_shard_ids)} index for {index_args.index_shard_ids} sequentially...")
+            index_shard_ids_list = index_args.index_shard_ids
+        else:
+            print(f"Single-index mode: building a single index over {index_args.index_shard_ids} shards...")
+            index_shard_ids_list = [index_args.index_shard_ids]
+
+        all_exist = True
+        for index_shard_ids in index_shard_ids_list:
+            # check if all search results exist
+            output_path = get_search_output_path(cfg, index_shard_ids)
+            all_exist = all_exist and os.path.exists(output_path)
+        
+        if all_exist and not eval_args.search.overwrite:
+            logging.info(f'All search results for {index_args.index_shard_ids} exist, skipping searching.')
+            do_search = False
+
     else:
+        output_path = get_search_output_path(cfg)
+        do_search = not os.path.exists(output_path)
+        
+    if do_search:
         # load model and evaluation data
         logging.info(f"Loading model from: {cfg.model.datastore_encoder}")
         model_name_or_path = cfg.model.query_encoder
@@ -264,36 +276,56 @@ def search_dense_topk(cfg):
         if eval_args.search.get('cache_query_embedding_only', False):
             return
 
-        # load index
-        for index_shard_ids in index_shard_ids_list:
-            output_path = get_search_output_path(cfg, index_shard_ids)
+        if index_args.index_shard_ids:
+            # load index
+            for index_shard_ids in index_shard_ids_list:
+                output_path = get_search_output_path(cfg, index_shard_ids)
+                
+                if os.path.exists(output_path) and not eval_args.search.overwrite:
+                    logging.info(f'{output_path} exists, skipping searching.')
+
+                else:
+                    copied_data = copy.deepcopy(data)
+
+                    # TODO: load index and perform search
+                    logging.info("Loading or constructing the datastore...")
+                    index = Indexer(cfg)
+                    
+                    logging.info("Searching for the queries...")
+                    all_scores, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
+                    
+                    # todo: double check valid_query_idx
+                    logging.info(f"Adding documents to eval data...")
+                    add_passages_to_eval_data(copied_data, all_passages, all_scores, db_ids, valid_query_idx, domain=ds_domain)
+                    
+                    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                    safe_write_jsonl(copied_data, output_path)
+   
+        else:
+            output_path = get_search_output_path(cfg)
+
+            # TODO: load index and perform search
+            logging.info("Loading or constructing the datastore...")
+            index = Indexer(cfg)
             
-            if os.path.exists(output_path) and not eval_args.search.overwrite:
-                logging.info(f'{output_path} exists, skipping searching.')
+            logging.info("Searching for the queries...")
+            all_scores, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
+            
+            # todo: double check valid_query_idx
+            logging.info(f"Adding documents to eval data...")
+            add_passages_to_eval_data(data, all_passages, all_scores, db_ids, valid_query_idx, domain=ds_domain)
+            
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            safe_write_jsonl(data, output_path)
 
-            else:
-                copied_data = copy.deepcopy(data)
+    if index_args.index_shard_ids:
 
-                # TODO: load index and perform search
-                logging.info("Loading or constructing the datastore...")
-                index = Indexer(cfg)
-                
-                logging.info("Searching for the queries...")
-                all_scores, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
-                
-                # todo: double check valid_query_idx
-                logging.info(f"Adding documents to eval data...")
-                add_passages_to_eval_data(copied_data, all_passages, all_scores, db_ids, valid_query_idx, domain=ds_domain)
-                
-                os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                safe_write_jsonl(copied_data, output_path)
-    
-    if cfg.evaluation.search.get('merge_multi_source_results', False) and cfg.evaluation.search.get("topk_subsample_p", None):
-        post_hoc_merge_topk_multi_domain(cfg)
+        if cfg.evaluation.search.get('merge_multi_source_results', False) and cfg.evaluation.search.get("topk_subsample_p", None):
+            post_hoc_merge_topk_multi_domain(cfg)
 
-    elif cfg.evaluation.search.get('merge_multi_index_results', True):
-        post_hoc_merge_topk(cfg)
-    
+        elif cfg.evaluation.search.get('merge_multi_index_results', True):
+            post_hoc_merge_topk(cfg)
+        
 
 def post_hoc_merge_topk(cfg):
     """
