@@ -22,6 +22,8 @@ class Indexer(object):
         logging.info(f"Indexing for passages: {embedding_paths}")
         if "IVF" in self.index_type:
             formatted_index_name = f"index_{self.index_type}.{self.args.sample_train_size}.{self.args.projection_size}.{self.args.ncentroids}.faiss"
+            if "PQ" in self.index_type:
+                formatted_index_name = formatted_index_name.replace(".faiss", f".{self.args.n_subquantizers}.faiss")
             trained_index_path = os.path.join(index_dir, formatted_index_name+'.trained')
         else:
             formatted_index_name = f"index_{self.index_type}.faiss"
