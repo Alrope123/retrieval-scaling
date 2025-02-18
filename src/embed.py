@@ -214,17 +214,15 @@ def generate_passage_embeddings(cfg):
                 print(f"Embeddings exist in {embedding_shard_save_path}")
                 continue
             
-            '''
             shard_passages = fast_load_jsonl_shard_full_files(args, partition_file_paths, rank, shard_id, shard_start, num_files, num_shards)
             if args.get("logloc",None):
                 logpath = Path(args.logloc)
                 logpath.mkdir(parents=True, exist_ok=True)
                 with open(os.path.join(args.logloc,f"{rank}_{shard_id:02d}.json"),"w") as logout:
                     logout.write(json.dumps(shard_passages,indent=4))
-            '''
-            shard_passages = fast_load_jsonl_shard(args, shard_id) #, return_all_passages=True)
+            #shard_passages = fast_load_jsonl_shard(args, shard_id) #, return_all_passages=True)
+            
             allids, allembeddings = embed_passages(args, shard_passages, model, tokenizer, shard_id, num_shards)
-
             os.makedirs(args.embedding_dir, exist_ok=True)
             print(f"Saving {len(allids)} passage embeddings to {embedding_shard_save_path}.")
             with smart_open.open(embedding_shard_save_path, mode="wb") as file:
