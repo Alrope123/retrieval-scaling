@@ -19,7 +19,7 @@ class Indexer(object):
         passage_dir = self.cfg.datastore.embedding.passages_dir
         index_dir, embedding_paths = get_index_dir_and_embedding_paths(cfg)
         os.makedirs(index_dir, exist_ok=True)
-        logging.info(f"Indexing for passages: {embedding_paths}")
+        # logging.info(f"Indexing for passages: {embedding_paths}")
         if "IVF" in self.index_type:
             formatted_index_name = f"index_{self.index_type}.{self.args.sample_train_size}.{self.args.projection_size}.{self.args.ncentroids}.faiss"
             if "PQ" in self.index_type:

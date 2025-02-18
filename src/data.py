@@ -13,10 +13,8 @@ from src.indicies.index_utils import convert_pkl_to_jsonl, get_passage_pos_ids
 import boto3
 import smart_open
 
-
 ############################## Training ##############################
-#def fast_load_jsonl_shard(args,file_paths,file_sizes,rank,shard_index, shard_size,num_shards):
-def fast_load_jsonl_shard(args, shard_index, return_all_passages=True):
+def fast_load_jsonl_shard(args,file_paths,file_sizes,rank,shard_index, shard_size,num_shards):
     """
     This function is designed to handle large datasets by only loading the specific portion of data (shard) that 
     corresponds to the given shard index.
@@ -26,76 +24,13 @@ def fast_load_jsonl_shard(args, shard_index, return_all_passages=True):
     based on `chunk_sz`, and appends each chunk to a list with an incremental ID.
     """
     raw_data_path = args.raw_data_path
-    
-    '''
     # num_shards = args.num_shards if args.num_shards else None
     chunk_sz = args.chunk_size
     min_chunk_sz = args.get('min_chunk_sz', 0)
     keep_last = args.get('keep_last_chunk', True)
 
     passage_shard_save_path = os.path.join(args.passages_dir, f'raw_passages_{rank}-{shard_index}-of-{num_shards}.pkl')
-    '''
-    raw_data_key = args.get('raw_data_key', 'text')
-    num_shards = args.num_shards
-    chunk_sz = args.chunk_size
-    min_chunk_sz = args.get('min_chunk_sz', 0)
-    keep_last = args.get('keep_last_chunk', True)
-    chunking_strategy = args.get('chunking_strategy', 'fixed_size')
-    keep_raw_metadata = args.get('keep_raw_metadata', True)
-    use_passage_pos_id_map = args.get('use_passage_pos_id_map', False)
     
-    if not return_all_passages:
-        assert use_passage_pos_id_map, f"You must set `use_passage_pos_id_map=True` to enable efficient passage loading!"
-
-    # Check the existance of processed data
-    if use_passage_pos_id_map:
-        passage_shard_save_path = os.path.join(args.passages_dir, f'raw_passages-{shard_index}-of-{num_shards}.jsonl')
-        pos_map_save_path = os.path.join(args.passages_dir, 'passage_pos_id_map.pkl')
-
-        if not return_all_passages:
-            if os.path.exists(pos_map_save_path):
-                with open(pos_map_save_path, 'rb') as f:
-                    passage_pos_ids = pickle.load(f)
-                return  passage_pos_ids
-            else:
-                # If all jsonl data has been built, construct passage_pos_ids and return it
-                all_data_exist = True
-                for _shard_index in range(num_shards):
-                    passage_shard_save_path_to_check = os.path.join(args.passages_dir, f'raw_passages-{_shard_index}-of-{num_shards}.jsonl')
-                    if not os.path.exists(passage_shard_save_path_to_check):
-                        all_data_exist = False
-                if all_data_exist: 
-                    passage_pos_ids = get_passage_pos_ids(args.passages_dir, pos_map_save_path)
-                    return  passage_pos_ids
-        
-        elif os.path.exists(passage_shard_save_path):
-            passages = []
-            with open(passage_shard_save_path, 'r') as fin:
-                for line in fin:
-                    passages.append(json.loads(line))
-            return passages
-            
-    else:
-        passage_shard_save_path = os.path.join(args.passages_dir, f'raw_passages-{shard_index}-of-{num_shards}.pkl')
-    
-        if os.path.exists(passage_shard_save_path):
-            logging.info(f'Loading from {passage_shard_save_path}...')
-            with open(passage_shard_save_path, 'rb') as file:
-                passages = pickle.load(file)
-            return passages
-
-    # Construct missing passages
-    if not os.path.exists(raw_data_path):
-        logging.info(f"{raw_data_path} does not exist")
-        return
-
-    if os.path.isdir(raw_data_path):
-        all_file_paths = [os.path.join(raw_data_path, file) for file in os.listdir(raw_data_path)]
-    else:
-        all_file_paths = [raw_data_path]
-   
-    ##################################################3
-
     shard_start = shard_size * shard_index
     shard_end = shard_start + shard_size if shard_index < shard_size - 1 else total_size
     
@@ -141,7 +76,7 @@ def fast_load_jsonl_shard(args, shard_index, return_all_passages=True):
             else:
                 break
         file.close()
-    
+
     if args.get('passages_dir', None):
         os.makedirs(args.passages_dir, exist_ok=True)
         with smart_open.open(passage_shard_save_path, 'wb') as file:
