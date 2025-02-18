@@ -222,8 +222,7 @@ def generate_passage_embeddings(cfg):
                 with open(os.path.join(args.logloc,f"{rank}_{shard_id:02d}.json"),"w") as logout:
                     logout.write(json.dumps(shard_passages,indent=4))
             '''
-            shard_passages = fast_load_jsonl_shard(args, shard_id, return_all_passages=True)
-
+            shard_passages = fast_load_jsonl_shard(args, shard_id) #, return_all_passages=True)
             allids, allembeddings = embed_passages(args, shard_passages, model, tokenizer, shard_id, num_shards)
 
             os.makedirs(args.embedding_dir, exist_ok=True)
