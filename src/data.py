@@ -108,7 +108,7 @@ def fast_load_jsonl_shard_full_files(args,file_paths,rank,shard_index, shard_sta
                 line = line.strip()
                 if line:
                     ex = json.loads(line)
-                    chunks = split_data_into_chunks(ex['text'].strip(), chunk_sz, min_chunk_sz, keep_last, chunking_strategy)
+                    chunks = split_data_into_chunks(ex['text'].strip(), chunk_sz, min_chunk_sz, keep_last)
                     for chunk in chunks:
                         '''
                         pass_dict = {
