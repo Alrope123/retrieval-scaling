@@ -39,6 +39,7 @@ def convert_pkl_to_jsonl(passage_dir):
         filenames = os.listdir(passage_dir)
         pkl_files = [filename for filename in filenames if '.pkl' in filename]
         jsonl_files = [filename for filename in filenames if '.jsonl' in filename]
+        print (f"Found {len(pkl_files)} pkl files and {len(jsonl_files)} jsonl files")
         if len(pkl_files)==len(jsonl_files):
             return
         print(f"Converting passages to JSONL data format: {passage_dir}")
