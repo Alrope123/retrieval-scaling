@@ -316,7 +316,8 @@ def search_dense_topk(cfg):
             # TODO: load index and perform search
             logging.info("Loading or constructing the datastore...")
             index = Indexer(cfg)
-            
+            print (index, index.ntotal)
+
             logging.info("Searching for the queries...")
             all_scores, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
             
