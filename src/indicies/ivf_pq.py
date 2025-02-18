@@ -88,7 +88,6 @@ class IVFPQIndexer(object):
         if self.pos_map_save_path is not None:
             self.psg_pos_id_map = self.load_psg_pos_id_map()
 
-
         print ("index:", self.index)
         print (self.index.ntotal)
 
@@ -210,7 +209,7 @@ class IVFPQIndexer(object):
         return passage_pos_ids
 
     def load_psg_pos_id_map(self,):
-        if os.path.exists(self.pos_map_save_path):
+        if False: #os.path.exists(self.pos_map_save_path):
             with open(self.pos_map_save_path, 'rb') as f:
                 psg_pos_id_map = pickle.load(f)
         else:
