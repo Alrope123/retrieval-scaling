@@ -132,31 +132,14 @@ def get_shard_specs(args, file_paths, file_sizes):
 
 def get_file_paths_and_sizes(args):
     file_sizes = []
-    if "s3://" in args.raw_data_path:
+    if "s3://" in args.raw_data_path and (
+            args.raw_data_path.endswith(".jsonl") or args.raw_data_path.endswith(".gz")):
+        file_paths = [args.raw_data_path]
+    elif "s3://" in args.raw_data_path:
         from src.utils_paths import glob_path
         file_paths = sorted(
                 list(glob_path(os.path.join(args.raw_data_path, "*.gz")))
         )
-        print (args.raw_data_path)
-
-        '''
-        client = boto3.client('s3')
-        m = re.match("s3://([^/]+)/(.*)",args.raw_data_path)
-        bucket, filedir = m.groups()[0],m.groups()[1]
-        paginator = client.get_paginator('list_objects_v2')
-        pages = paginator.paginate(Bucket=bucket, Prefix=filedir)
-
-        file_paths = []
-        file_sizes = []
-        for page in pages:
-            for obj in page["Contents"]:
-                okey = obj["Key"]
-                if ".json" not in okey.split("/")[-1]:
-                    continue
-                filepath = f"s3://{bucket}/{okey}"
-                file_paths.append(filepath)
-                # file_sizes.append(obj["Size"])
-        '''
     else:
         for file in os.listdir(args.raw_data_path):
             file_paths.append(os.path.join(args.raw_data_path, file))
