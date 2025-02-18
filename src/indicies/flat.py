@@ -49,12 +49,15 @@ class FlatIndexer(object):
 
     def _build_index(self,):
         start_time = time.time()
-        for embed_path in self.embed_paths:
-            filename = os.path.basename(embed_path)
-            match = re.search(r"passages_(\d+)\.pkl", filename)
-            shard_id = int(match.group(1))
+        for shard_id, embed_path in enumerate(self.embed_paths):
+            #filename = os.path.basename(embed_path)
+            #match = re.search(r"passages_(\d+)\.pkl", filename)
+            #shard_id = int(match.group(1))
+            #to_add = self.get_embs(shard_id=shard_id).copy()
+            
+            with open(embed_path, "rb") as fin:
+                _, to_add = pickle.load(fin)
                 
-            to_add = self.get_embs(shard_id=shard_id).copy()
             self.index.add(to_add)
             ids_toadd = [[shard_id, chunk_id] for chunk_id in range(len(to_add))]  #TODO: check len(to_add) is correct usage
             self.index_id_to_db_id.extend(ids_toadd)

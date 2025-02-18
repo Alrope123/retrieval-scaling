@@ -34,7 +34,6 @@ def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None):
     return index_dir, embedding_paths
 
 
-
 def convert_pkl_to_jsonl(passage_dir):
     if os.path.isdir(passage_dir):
         filenames = os.listdir(passage_dir)
