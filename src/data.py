@@ -143,8 +143,10 @@ def fast_load_jsonl_shard_full_files(args,file_paths,rank,shard_index, shard_sta
     
     if args.get('passages_dir', None):
         os.makedirs(args.passages_dir, exist_ok=True)
-        #with smart_open.open(passage_shard_save_path, 'wb') as file:
-        #    pickle.dump(passages, file)
+        with smart_open.open(passage_shard_save_path, 'wb') as file:
+            pickle.dump(passages, file)
+        
+        '''
         if use_passage_pos_id_map:
             with open(passage_shard_save_path, 'w') as file:
                 for passage in passages:
@@ -162,7 +164,7 @@ def fast_load_jsonl_shard_full_files(args,file_paths,rank,shard_index, shard_sta
         else:
             with open(passage_shard_save_path, 'wb') as file:
                 pickle.dump(passages, file)
-
+        '''
     if return_all_passages:
         return passages
     else:
