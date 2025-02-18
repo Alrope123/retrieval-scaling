@@ -242,7 +242,7 @@ def search_dense_topk(cfg):
         output_path = get_search_output_path(cfg)
         do_search = not os.path.exists(output_path)
         
-    if True: #do_search:
+    if do_search:
         # load model and evaluation data
         logging.info(f"Loading model from: {cfg.model.datastore_encoder}")
         model_name_or_path = cfg.model.query_encoder
