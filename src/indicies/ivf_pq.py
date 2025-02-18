@@ -75,6 +75,7 @@ class IVFPQIndexer(object):
             self.index = faiss.read_index(index_path)
             self.index_id_to_db_id = self.load_index_id_to_db_id()
             self.index.nprobe = self.probe
+        
         else:
             self.index_id_to_db_id = []
             if not os.path.exists(self.trained_index_path):
@@ -86,6 +87,10 @@ class IVFPQIndexer(object):
         
         if self.pos_map_save_path is not None:
             self.psg_pos_id_map = self.load_psg_pos_id_map()
+
+
+        print ("index:", self.index)
+        print (self.index.ntotal)
 
     def load_index_id_to_db_id(self,):
         with open(self.meta_file, "rb") as reader:
