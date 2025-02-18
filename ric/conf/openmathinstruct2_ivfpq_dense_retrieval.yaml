@@ -63,7 +63,7 @@ datastore:
     projection_size: 768
     probe: 256 #64 #8
     ncentroids: 2048 # 4096 in silo 
-    n_subquantizers: 256 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
+    n_subquantizers: 64 # 256 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
     n_bits: 8    # Number of bits per subquantizer, introducing compression rate of embedding_precision / n_bits
     overwrite: false
 
