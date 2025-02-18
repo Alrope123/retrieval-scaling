@@ -57,7 +57,7 @@ datastore:
     index_shard_ids: null
     save_or_load_index: True
     no_fp16: False
-    index_type: Flat #IVFPQ
+    index_type: IVFPQ
     sample_train_size: 100000
     indexing_batch_size: 1000000
     projection_size: 768

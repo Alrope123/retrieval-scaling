@@ -150,7 +150,16 @@ def get_search_output_path(cfg, index_shard_ids=None):
         output_dir = os.path.join(eval_args.eval_output_dir, shards_postfix)
     else:
         output_dir = eval_args.eval_output_dir
-    output_path = os.path.join(output_dir, os.path.basename(eval_args.data.eval_data).replace('.jsonl', '_retrieved_results.jsonl'))
+    
+    # postfix = datastore.index.index_type
+    if "IVF" in self.index_type:
+        postfix = f"_{datastore.index.index_type}.{datastore.index.ncentroids}"
+        if "PQ" in datastore.index.index_type:
+            postfix = f"{postfix}.{datastore.index.probe}"
+    else:
+        postfix = ""
+
+    output_path = os.path.join(output_dir + postfix, os.path.basename(eval_args.data.eval_data).replace('.jsonl', '_retrieved_results.jsonl'))
     return output_path
 
 
