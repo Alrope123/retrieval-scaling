@@ -121,7 +121,7 @@ def fast_load_jsonl_shard_full_files(args,file_paths,rank,shard_index, shard_sta
                             pass_dict[added_field] = ex[added_field]
                         passages.append(pass_dict)
                         '''
-                        if keep_raw_metadata:
+                        if False: #keep_raw_metadata:
                             # keep the original metadata in the updated raw
                             passage = dict(ex)
                             passage.update({
