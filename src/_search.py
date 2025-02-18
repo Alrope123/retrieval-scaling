@@ -242,7 +242,7 @@ def search_dense_topk(cfg):
         output_path = get_search_output_path(cfg)
         do_search = not os.path.exists(output_path)
         
-    if True : #do_search:
+    if True: #do_search:
         # load model and evaluation data
         logging.info(f"Loading model from: {cfg.model.datastore_encoder}")
         model_name_or_path = cfg.model.query_encoder
@@ -316,8 +316,7 @@ def search_dense_topk(cfg):
             # TODO: load index and perform search
             logging.info("Loading or constructing the datastore...")
             index = Indexer(cfg)
-            print (index, index.ntotal)
-            exit()
+            print (index.index, index.index.ntotal)
 
             logging.info("Searching for the queries...")
             all_scores, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
