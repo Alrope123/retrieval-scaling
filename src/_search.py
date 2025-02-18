@@ -151,10 +151,10 @@ def get_search_output_path(cfg, index_shard_ids=None):
     else:
         output_dir = eval_args.eval_output_dir
     
-    # postfix = datastore.index.index_type
-    if "IVF" in self.index_type:
-        postfix = f"_{datastore.index.index_type}.{datastore.index.ncentroids}"
-        if "PQ" in datastore.index.index_type:
+    index_type = datastore.index.index_type
+    if "IVF" in index_type:
+        postfix = f"_{index_type}.{datastore.index.ncentroids}"
+        if "PQ" in index_type:
             postfix = f"{postfix}.{datastore.index.probe}"
     else:
         postfix = ""
