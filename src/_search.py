@@ -155,7 +155,8 @@ def get_search_output_path(cfg, index_shard_ids=None):
     if "IVF" in index_type:
         postfix = f"_{index_type}.{cfg.datastore.index.ncentroids}"
         if "PQ" in index_type:
-            postfix = f"{postfix}.{cfg.datastore.index.n_subquantizers}.{cfg.datastore.index.probe}"
+            postfix = f"{postfix}.{cfg.datastore.index.n_subquantizers}"
+        postfix = f"{postfix}.{cfg.datastore.index.probe}"
     else:
         postfix = ""
 
