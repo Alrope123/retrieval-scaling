@@ -165,10 +165,7 @@ def fast_load_jsonl_shard_full_files(args,file_paths,rank,shard_index, shard_sta
             with open(passage_shard_save_path, 'wb') as file:
                 pickle.dump(passages, file)
         '''
-    if return_all_passages:
-        return passages
-    else:
-        return passage_pos_ids
+    return passages
 
 
 
