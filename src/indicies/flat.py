@@ -58,11 +58,6 @@ class FlatIndexer(object):
             with open(embed_path, "rb") as fin:
                 _, to_add = pickle.load(fin)
 
-            print (to_add.dtype)
-            to_add = to_add.astype(np.float16)
-            print (to_add.dtype)
-            exit()
-
             self.index.add(to_add)
             ids_toadd = [[shard_id, chunk_id] for chunk_id in range(len(to_add))]  #TODO: check len(to_add) is correct usage
             self.index_id_to_db_id.extend(ids_toadd)
