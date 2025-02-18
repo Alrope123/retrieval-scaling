@@ -273,45 +273,50 @@ def split_data_into_chunks(text, chunk_sz, min_chunk_sz, keep_last, chunking_str
 
 ############################## Evaluation ##############################
 def load_eval_data(cfg):
-    data_filepath = cfg.evaluation.data.eval_data
-    task_name = cfg.tasks.eval.task_name
-                    
     # use lm_tokenizer to make sure the number of tokens consitent with the ones for PPL computation
     tokenizer = transformers.AutoTokenizer.from_pretrained(cfg.model.lm_model)
-
-    if data_filepath.endswith('.jsonl'):
-        data = load_jsonl(data_filepath)    # 'text', 'meta'
-    elif data_filepath.endswith('.parquet'):
-        data = load_parquet(data_filepath)
     
-    if task_name == 'perplexity':
-        eval_data_args = cfg.evaluation.data
+    task_name = cfg.tasks.eval.task_name
 
-        data = prepare_ppl_eval_data(
-            data, 
-            tokenizer, 
-            eval_data_args.max_eval_data_seq_length, 
-            eval_data_args.eval_stride, 
-            eval_data_args.merge, 
-            eval_data_args.num_eval_samples,
-            eval_data_args.seed,
-            )
-    
-    elif task_name == 'lm-eval':
-        # prepare data for lm-evaluate-harness
-        data = prepare_lm_eval_data(data)
-    
-    elif task_name == 'mmlu':
-        # (test case) prepare mmlu for instruct-eval
-        data = prepare_mmlu_eval_data(data)
+    data_filepaths = cfg.evaluation.data.eval_data.split(",")
 
-    elif task_name == 'gen':
-        prepare_gen_eval_data(data)
-    
-    else:
-        raise AttributeError
+    all_data = []
+    for data_filepath in data_filepaths:
+        if data_filepath.endswith('.jsonl'):
+            data = load_jsonl(data_filepath)    # 'text', 'meta'
+        elif data_filepath.endswith('.parquet'):
+            data = load_parquet(data_filepath)
+        
+        if task_name == 'perplexity':
+            eval_data_args = cfg.evaluation.data
 
-    return data
+            data = prepare_ppl_eval_data(
+                data, 
+                tokenizer, 
+                eval_data_args.max_eval_data_seq_length, 
+                eval_data_args.eval_stride, 
+                eval_data_args.merge, 
+                eval_data_args.num_eval_samples,
+                eval_data_args.seed,
+                )
+        
+        elif task_name == 'lm-eval':
+            # prepare data for lm-evaluate-harness
+            data = prepare_lm_eval_data(data)
+        
+        elif task_name == 'mmlu':
+            # (test case) prepare mmlu for instruct-eval
+            data = prepare_mmlu_eval_data(data)
+
+        elif task_name == 'gen':
+            prepare_gen_eval_data(data)
+        
+        else:
+            raise AttributeError
+
+        all_data += data
+
+    return all_data
 
 
 def prepare_gen_eval_data(data):
