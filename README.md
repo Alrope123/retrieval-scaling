@@ -1,5 +1,44 @@
 # Dense Retrieval Codebase
 
+
+## Gantry scripts
+There are three scripts for running embedding, indexing, and search via gantry. Current parallelization method assumes 1 GPU per replica, so for all scripts **keep the setting of "--gpus 1"**.
+
+**1. Embedding**: `run_gantry_embedding.sh`. 
+This is the first place where we distribute across GPUs, to accelerate the embedding process. To increase parallelization, increase `--replicas`. Note that the parallelization works by partitioning input files across replicas, so this won't be effective if you have very few input files.
+```
+--gpus 1 \
+--replicas 8 \
+``` 
+
+**2. Indexing**: `run_gantry_index.sh`.
+gpus can be 0 or 1.
+
+**3. Search**: `run_gantry_search.sh`.
+gpus needs to be 1.
+
+By default, it uses MMLU queries as search queries. To change the data, modify `evaluation.data.eval_data` either in the config file or as a command line. See the example MMLU queries data in s3 to see how the input to the search should look like. For multiple datasets, you can specify multiple paths separated by a comma. See `wiki_dense_retrieval.yaml` for a reference, which specify two paths for NQ and TQA.
+
+Search results are saved under `{datastore.embedding.output_dir}/retrieved_results` (see `eval_output_dir` in the config file).` These results can directly be fed into the private-retrieval-lm codebase.
+
+
+
+## Configs
+All configs are under `ric/conf`. Use `ric/conf/c4_dense_retrieval.yaml` as an example.
+
+**Adding a new data source**: Copy an existing yaml file and change three places: `datastore.raw_data_path`, `datastore.domain`, and `datastore.embedding.output_dir`.
+
+**Ablating the choice of embedder**: Change four places: `model.datastore_tokenizer`, `model.query_tokenizer`, `model.query_encoder`, and `model.datastore_encoder`. Check out four config files under `ric/conf/dclm*.yaml` for the configs for Contriever (`dclm_ft7percentile_fw3_dense_retrieval.yaml`), e5, me5 and GTR. `projection_size` might have to be updated too if the dimension of the embedder is different.
+
+**Ablating the choice of index types**: See three files under `ric/conf/wiki*dense_retrieval.yaml` for examples
+- `wiki_dense_retrieval.yaml`: Flat index (exact search). Can just put `index_type` to be "Flat" and other hyperparams don't matter. Most accurate as it is exact search, and the original MassiveDS uses it. However, slow, and uses a lot of RAM. Most data sources are OK with Flat with 1TB RAM, but C4, DCLM, and other comparable sources can't use it. To calculate how much RAM would use, you can use `# of chunks * dimension (768 for Contriever) * 32 bits`.
+- `wiki_ivfflat_dense_retrieval.yaml`: Faster than Flat, mostly accurate, but uses the same amount of RAM. Hyperparmas that matter are: `ncentroids` and `probe`. Difference `ncentroids` requires re-building index; `probe` is a hyperparameter that can differ at search time, without needing to re-build the index.
+- `wiki_ivfpq_dense_retrieva.yaml`: IVF + compress vectors to reduce RAM use. Less accurate, but the only _implemented_ solution if we want to reduce RAM. Hyperparams that matter are those matter for IVF plus `n_subquentizers`. (`n_bits` matters too but everyone seems to use 8, so would fix it.) To calculate how much RAM it would use, you can do `# of chunks * n_quantizers * 8 bits`. Using 256 as `n_quantizers` offers about 12x compression.
+
+----------------------------------------------------------------------------------
+
+(From previous branch)
+
 This repo is based on the code from paper "Scaling Retrieval-Based Langauge Models with a Trillion-Token Datastore".
 
 [[Website](https://retrievalscaling.github.io)][[Paper](https://arxiv.org/abs/2407.12854)]

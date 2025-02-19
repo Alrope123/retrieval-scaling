@@ -12,7 +12,7 @@ export BEAKER_EXPERIMENT_NAME="Contriever-search"
 #config_name=c4_dense_retrieval
 
 
-command="python -m ric.main_ric --config-name $1_dense_retrieval tasks.eval.task_name=lm-eval tasks.datastore.index=true tasks.eval.search=true"
+command="python -m ric.main_ric --config-name $1 tasks.eval.task_name=lm-eval tasks.datastore.index=true tasks.eval.search=true"
 
 gantry run \
     --task-name "Contriever-search-$1" \
