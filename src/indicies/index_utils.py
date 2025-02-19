@@ -28,7 +28,7 @@ def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None):
         def sort_func(x):
             rank, shard_idx = x.split("/")[-1].split(f'{embedding_args.prefix}')[-1].split(".pkl").split("_")
             return int(rank), int(shard_idx)
-        embedding_paths = sorted(embedding_paths, key=soft_func)
+        embedding_paths = sorted(embedding_paths, key=sort_func)
 
         embedding_paths = embedding_paths if index_args.num_subsampled_embedding_files == -1 else embedding_paths[0:index_args.num_subsampled_embedding_files]
         
