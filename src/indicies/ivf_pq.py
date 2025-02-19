@@ -70,6 +70,12 @@ class IVFPQIndexer(object):
         self.n_subquantizers = n_subquantizers
         self.code_size = code_size
 
+        print ("DEBUGGING", self.embed_paths)
+        print ("DEBUGGING", os.path.exists(index_path), os.path.exists(self.meta_file))
+        self.psg_pos_id_map = self.load_psg_pos_id_map()
+        exit()
+
+
         if os.path.exists(index_path) and os.path.exists(self.meta_file):
             print("Loading index...")
             self.index = faiss.read_index(index_path)
