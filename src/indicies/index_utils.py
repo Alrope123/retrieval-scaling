@@ -89,10 +89,6 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
             jsonl_files,
             key=lambda x: (int(x.split('passages_')[-1].split("-")[0]), int(x.split("-of-")[0].split("-")[-1])))
 
-        print ("DEBUGGING")
-        print (jsonl_files[:200])
-        exit()
-
         pos_id_map = {}
         print(f"Generating id2pos for {passage_dir}")
         for shard_id, filename in enumerate(tqdm(jsonl_files)):
