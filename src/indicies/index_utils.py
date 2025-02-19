@@ -25,8 +25,11 @@ def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None):
         
     else:
         embedding_paths = glob.glob(index_args.passages_embeddings)
-        embedding_paths = sorted(embedding_paths, key=lambda x: int(x.split('/')[-1].split(f'{embedding_args.prefix}')[-1].split('.pkl')[0]))
-        # embedding_paths = sorted(embedding_paths, key=lambda x: int(x.split('/')[-1].split(f'{embedding_args.prefix}_')[-1].split('.pkl')[0]))  # must sort based on the integer number
+        def sort_func(x):
+            rank, shard_idx = x.split("/")[-1].split(f'{embedding_args.prefix}')[-1].split(".pkl").split("_")
+            return int(rank), int(shard_idx)
+        embedding_paths = sorted(embedding_paths, key=soft_func)
+
         embedding_paths = embedding_paths if index_args.num_subsampled_embedding_files == -1 else embedding_paths[0:index_args.num_subsampled_embedding_files]
         
         index_dir = os.path.join(os.path.dirname(embedding_paths[0]), f'index_{index_type}')
@@ -87,7 +90,7 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
             key=lambda x: (int(x.split('passages_')[-1].split("-")[0]), int(x.split("-of-")[0].split("-")[-1])))
 
         print ("DEBUGGING")
-        print (jsonl_files)
+        print (jsonl_files[:200])
         exit()
 
         pos_id_map = {}
