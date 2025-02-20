@@ -4,17 +4,18 @@
 ## Gantry scripts
 There are three scripts for running embedding, indexing, and search via gantry. Current parallelization method assumes 1 GPU per replica, so for all scripts **keep the setting of "--gpus 1"**.
 
-**1. Embedding**: `run_gantry_embedding.sh`. 
+**1. Embedding**: `run_gantry_embedding.sh {config_name}`. (For instance, if your config file is `ric/conf/c4_dense_retrieval.yaml`, do `run_gantry_embedding.sh c4_dense_retrieval`)
+
 This is the first place where we distribute across GPUs, to accelerate the embedding process. To increase parallelization, increase `--replicas`. Note that the parallelization works by partitioning input files across replicas, so this won't be effective if you have very few input files.
 ```
 --gpus 1 \
 --replicas 8 \
 ``` 
 
-**2. Indexing**: `run_gantry_index.sh`.
+**2. Indexing**: `run_gantry_index.sh {config_name}`.
 gpus can be 0 or 1.
 
-**3. Search**: `run_gantry_search.sh`.
+**3. Search**: `run_gantry_search.sh {config_name}`.
 gpus needs to be 1.
 
 By default, it uses MMLU queries as search queries. To change the data, modify `evaluation.data.eval_data` either in the config file or as a command line. See the example MMLU queries data in s3 to see how the input to the search should look like. For multiple datasets, you can specify multiple paths separated by a comma. See `wiki_dense_retrieval.yaml` for a reference, which specify two paths for NQ and TQA.
