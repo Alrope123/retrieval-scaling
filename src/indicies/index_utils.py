@@ -25,6 +25,8 @@ def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None):
         
     else:
         embedding_paths = glob.glob(index_args.passages_embeddings)
+        print(f"passages_embeddings: {index_args.passages_embeddings}")
+        print(f"Embedding_path: {embedding_paths}")
         def sort_func(x):
             rank, shard_idx = x.split("/")[-1].split(f'{embedding_args.prefix}')[-1].split(".pkl")[0].split("_")
             return int(rank), int(shard_idx)
