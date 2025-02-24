@@ -31,6 +31,8 @@ def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None):
             rank, shard_idx = x.split("/")[-1].split(f'{embedding_args.prefix}')[-1].split(".pkl")[0].split("_")
             return int(rank), int(shard_idx)
         embedding_paths = sorted(embedding_paths, key=sort_func)
+        print(f"DEBUG: Embedding_path after sorting: {embedding_paths}")
+        assert False
 
         embedding_paths = embedding_paths if index_args.num_subsampled_embedding_files == -1 else embedding_paths[0:index_args.num_subsampled_embedding_files]
         
@@ -87,9 +89,11 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
         jsonl_files = [filename for filename in filenames if '.jsonl' in filename]
         
         # raw_passages_{i}-{j}-of-{tot}.jsonl
+        print(f"DEBUG: raw files before sorting: {jsonl_files}")
         jsonl_files = sorted(
             jsonl_files,
             key=lambda x: (int(x.split('passages_')[-1].split("-")[0]), int(x.split("-of-")[0].split("-")[-1])))
+        print(f"DEBUG: raw files after sorting: {jsonl_files}")
 
         pos_id_map = {}
         print(f"Generating id2pos for {passage_dir}")
