@@ -78,10 +78,11 @@ def convert_pkl_to_jsonl(passage_dir):
 
 
 def get_passage_pos_ids(passage_dir, pos_map_save_path):
-    if os.path.exists(pos_map_save_path):
-        with open(pos_map_save_path, 'rb') as f:
-            pos_id_map = pickle.load(f)
-        return pos_id_map
+    # DEBUG
+    # if os.path.exists(pos_map_save_path):
+    #     with open(pos_map_save_path, 'rb') as f:
+    #         pos_id_map = pickle.load(f)
+    #     return pos_id_map
 
     if os.path.isdir(passage_dir):
         filenames = os.listdir(passage_dir)
