@@ -45,7 +45,7 @@ def convert_pkl_to_jsonl(passage_dir):
         filenames = os.listdir(passage_dir)
         pkl_files = [filename for filename in filenames if '.pkl' in filename]
         jsonl_files = [filename for filename in filenames if '.jsonl' in filename]
-        print (f"Found {len(pkl_files)} pkl files and {len(jsonl_files)} jsonl files")
+        print (f"Found {len(pkl_files)} pkl files and {len(jsonl_files)} jsonl files under {passage_dir}")
         if len(pkl_files)==len(jsonl_files):
             return
         print(f"Converting passages to JSONL data format: {passage_dir}")
@@ -69,13 +69,14 @@ def convert_pkl_to_jsonl(passage_dir):
         with open(file_path, 'rb') as f:
             data = pickle.load(f)
         
+        print(f"Length of {file}: {len(data)}")
+
         # Save the data to the JSONL file
         with open(jsonl_file, 'w') as f:
             for item in data:
                 json.dump(item, f)
                 f.write('\n')
     print("All pickle files have been converted to JSONL files.")
-
 
 def get_passage_pos_ids(passage_dir, pos_map_save_path):
     # DEBUG
@@ -112,6 +113,7 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
                     doc_id += 1
                     position = file.tell()
                     line = file.readline()
+            print(f"Building id2pos for {filename}: {doc_id-1}")
             pos_id_map[shard_id] = file_pos_id_map
     
     elif os.path.isfile(passage_dir):

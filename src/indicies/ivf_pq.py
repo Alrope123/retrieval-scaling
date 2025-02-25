@@ -191,10 +191,11 @@ class IVFPQIndexer(object):
             '''
             with open(embed_path, "rb") as fin:
                 _, to_add = pickle.load(fin)
-
+            print(f"Length of the embedding at {embed_path}: {len(to_add)}")
             index.add(to_add)
             ids_toadd = [[shard_id, chunk_id] for chunk_id in range(len(to_add))]  #TODO: check len(to_add) is correct usage
             self.index_id_to_db_id.extend(ids_toadd)
+            print(f"Length of the resulting index_id_to_db after {embed_path}: {len(self.index_id_to_db_id)}")
             print ('Added %d / %d shards, (%d min)' % (shard_id+1, len(self.embed_paths), (time.time()-start_time)/60))
         
         faiss.write_index(index, index_path)
@@ -217,6 +218,9 @@ class IVFPQIndexer(object):
         return psg_pos_id_map
     
     def _id2psg(self, shard_id, chunk_id):
+        if chunk_id not in self.psg_pos_id_map[shard_id]:
+            print(shard_id)
+            print(sorted(list(self.psg_pos_id_map[shard_id].values()))[-1])
         filename, position = self.psg_pos_id_map[shard_id][chunk_id]
         with open(filename, 'r') as file:
             file.seek(position)
@@ -237,6 +241,14 @@ class IVFPQIndexer(object):
         return passages, db_ids
     
     def search(self, query_embs, k=4096):
+        # DEBUG:
+        indices_length = len(self.index_id_to_db_id)
+        pos_length = 0
+        for shard_id in self.psg_pos_id_map:
+            for chunk_id in self.psg_pos_id_map[shard_id]:
+                pos_length += 1
+        print([indices_length, pos_length])
+        # assert False, [indices_length, pos_length]
         all_scores, all_indices = self.index.search(query_embs.astype(np.float32), k)
         all_passages, db_ids = self.get_retrieved_passages(all_indices)
         return all_scores.tolist(), all_passages, db_ids
