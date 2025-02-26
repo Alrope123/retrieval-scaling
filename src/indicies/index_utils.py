@@ -97,7 +97,8 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
         print(f"DEBUG: raw files after sorting: {jsonl_files}")
 
         pos_id_map = {}
-        print(f"Generating id2pos for {passage_dir}")
+        print(f"DEBUG: Generating id2pos for {passage_dir}")
+        total = 0
         for shard_id, filename in enumerate(tqdm(jsonl_files)):
             #match = re.match(r"raw_passages-(\d+)-of-\d+\.jsonl", filename)
             #shard_id = int(match.group(1))
@@ -113,7 +114,8 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
                     doc_id += 1
                     position = file.tell()
                     line = file.readline()
-            print(f"Building id2pos for {filename}: {doc_id-1}")
+            total += doc_id - 1
+            print(f"DEBUG: Building id2pos for {filename}: added {doc_id-1}, result in {total}")
             pos_id_map[shard_id] = file_pos_id_map
     
     elif os.path.isfile(passage_dir):
