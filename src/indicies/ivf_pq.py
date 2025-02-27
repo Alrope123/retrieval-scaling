@@ -191,11 +191,11 @@ class IVFPQIndexer(object):
             '''
             with open(embed_path, "rb") as fin:
                 _, to_add = pickle.load(fin)
-            print(f"DEBUG: Length of the embedding at {embed_path}: {len(to_add)}")
+            # print(f"DEBUG: Length of the embedding at {embed_path}: {len(to_add)}")
             index.add(to_add)
             ids_toadd = [[shard_id, chunk_id] for chunk_id in range(len(to_add))]  #TODO: check len(to_add) is correct usage
             self.index_id_to_db_id.extend(ids_toadd)
-            print(f"DEBUG: Length of the resulting index_id_to_db after {embed_path}: {len(self.index_id_to_db_id)}")
+            # print(f"DEBUG: Length of the resulting index_id_to_db after {embed_path}: {len(self.index_id_to_db_id)}")
             print ('Added %d / %d shards, (%d min)' % (shard_id+1, len(self.embed_paths), (time.time()-start_time)/60))
         
         faiss.write_index(index, index_path)
@@ -210,7 +210,7 @@ class IVFPQIndexer(object):
         return passage_pos_ids
 
     def load_psg_pos_id_map(self,):
-        if False: #os.path.exists(self.pos_map_save_path):
+        if os.path.exists(self.pos_map_save_path):
             with open(self.pos_map_save_path, 'rb') as f:
                 psg_pos_id_map = pickle.load(f)
         else:
