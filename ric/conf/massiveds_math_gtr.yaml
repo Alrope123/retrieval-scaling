@@ -13,10 +13,10 @@ tasks:
 model:
   sparse_retriever: null  # choices: null, bm25
   
-  datastore_tokenizer: facebook/contriever-msmarco
-  query_tokenizer: facebook/contriever-msmarco
-  query_encoder: facebook/contriever-msmarco
-  datastore_encoder: facebook/contriever-msmarco
+  datastore_tokenizer: sentence-transformers/gtr-t5-large
+  query_tokenizer: sentence-transformers/gtr-t5-large
+  query_encoder: sentence-transformers/gtr-t5-large
+  datastore_encoder: sentence-transformers/gtr-t5-large
   lm_model: meta-llama/Llama-3.1-8B-Instruct    # LM for evaluation
 
 
@@ -27,7 +27,7 @@ datastore:
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/xinxil/private-retrieval-lm/dense-retrieval/massiveds/math
+    output_dir: /weka_data/xinxil/private-retrieval-lm/gtr/massiveds/math
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}

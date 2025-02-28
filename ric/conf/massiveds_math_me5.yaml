@@ -13,10 +13,10 @@ tasks:
 model:
   sparse_retriever: null  # choices: null, bm25
   
-  datastore_tokenizer: facebook/contriever-msmarco
-  query_tokenizer: facebook/contriever-msmarco
-  query_encoder: facebook/contriever-msmarco
-  datastore_encoder: facebook/contriever-msmarco
+  datastore_tokenizer: intfloat/multilingual-e5-large-instruct
+  query_tokenizer: intfloat/multilingual-e5-large-instruct
+  query_encoder: intfloat/multilingual-e5-large-instruct
+  datastore_encoder: intfloat/multilingual-e5-large-instruct
   lm_model: meta-llama/Llama-3.1-8B-Instruct    # LM for evaluation
 
 
@@ -27,7 +27,7 @@ datastore:
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/xinxil/private-retrieval-lm/dense-retrieval/massiveds/math
+    output_dir: /weka_data/xinxil/private-retrieval-lm/me5/massiveds/math
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}
@@ -60,7 +60,7 @@ datastore:
     index_type: IVFPQ
     sample_train_size: 100000
     indexing_batch_size: 1000000
-    projection_size: 768
+    projection_size: 1024
     probe: 256 #64 #8
     ncentroids: 2048 # 4096 in silo 
     n_subquantizers: 256 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
