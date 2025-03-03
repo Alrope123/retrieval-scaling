@@ -12,7 +12,8 @@ export BEAKER_EXPERIMENT_NAME="Contriever-search"
 #config_name=c4_dense_retrieval
 
 
-command="python -m ric.main_ric --config-name $1 tasks.eval.task_name=lm-eval tasks.eval.search=true"
+command="python -m ric.main_ric --config-name $1 tasks.eval.task_name=lm-eval tasks.eval.search=true evaluation.data.eval_data=/weka_data/xinxil/private-retrieval-lm/eval_datasets/retrieval_unique_q.jsonl"
+# evaluation.data.eval_data=/weka_data/xinxil/private-retrieval-lm/eval_datasets/retrieval_unique.jsonl
 
 gantry run \
     --task-name "Contriever-search-$1" \
@@ -40,7 +41,7 @@ gantry run \
     --env-secret HF_TOKEN=SEWONM_HF_TOKEN \
     --install "pip install necessary" \
     --shared-memory 10GiB \
-    --weka oe-data-default:/data \
+    --weka oe-data-default:/weka_data \
     --yes \
     -- $command
     

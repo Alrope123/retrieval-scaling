@@ -18,7 +18,6 @@ gantry run \
     --leader-selection \
     --gpus 1 \
     --replicas 8 \
-    --preemptible \
     --cluster "${CLUSTER}" \
     --budget ai2/oe-data \
     --env LOG_FILTER_TYPE=local_rank0_only \
@@ -29,7 +28,7 @@ gantry run \
     --env-secret WANDB_API_KEY=SEWONM_WANDB_API_KEY \
     --install "pip install necessary platformdirs>=4.2.0 smart-open fsspec>=2023.6.0" \
     --shared-memory 10GiB \
-    --weka oe-data-default:/data \
+    --weka oe-data-default:/weka_data \
     --yes \
     -- python -m ric.main_ric --config-name $1 tasks.datastore.embedding=true
 
