@@ -29,7 +29,6 @@ gantry run \
     --leader-selection \
     --gpus 1 \
     --replicas 1 \
-    --preemptible \
     --cluster "${CLUSTER}" \
     --budget ai2/oe-data \
     --env LOG_FILTER_TYPE=local_rank0_only \
