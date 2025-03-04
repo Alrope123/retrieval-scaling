@@ -27,7 +27,7 @@ datastore:
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/sewonm/dense-retrieval/dclm_ft7percentile_fw3_full
+    output_dir: /data/sewonm/dense-retrieval/dclm_ft7percentile_fw3_full
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}
