@@ -56,7 +56,7 @@ datastore:
     index_shard_ids: null
     save_or_load_index: True
     no_fp16: False
-    index_type: PQ    # PQ, PQIVF (PQ degrades to flat when n_subquantizers is 0)
+    index_type: Flat
     indexing_batch_size: 1000000
     projection_size: 768
     n_subquantizers: 0    # Number of subquantizer used for vector quantization, if 0 flat index is used
