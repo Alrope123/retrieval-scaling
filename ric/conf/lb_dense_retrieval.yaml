@@ -48,12 +48,12 @@ datastore:
     prefix: "passages"
     embedding_dir: ${datastore.embedding.output_dir}/embeddings/${model.datastore_encoder}/${datastore.domain}
     use_saved_if_exists: false
-
   index:
     raw_data_path: ${datastore.raw_data_path}
     chunk_size: ${datastore.chunk_size}
     passages_embeddings: ${datastore.embedding.embedding_dir}/*.pkl
     num_subsampled_embedding_files: -1    # Number of subsampled embeddings, use all if pass -1, not supported yet, assume use all embeddings in the dir
+    index_shard_ids: null
     save_or_load_index: True
     no_fp16: False
     index_type: PQ    # PQ, PQIVF (PQ degrades to flat when n_subquantizers is 0)
@@ -62,9 +62,7 @@ datastore:
     n_subquantizers: 0    # Number of subquantizer used for vector quantization, if 0 flat index is used
     n_bits: 64    # Number of bits per subquantizer
     overwrite: true
-    max_files_per_index_shard: 2
-
-
+   
 evaluation:
   domain: mmlu
   search:
