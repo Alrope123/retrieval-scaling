@@ -256,6 +256,9 @@ def search_dense_topk(cfg):
         elif "sentence-transformers" in model_name_or_path:
             query_tokenizer = None
             query_encoder = SentenceTransformer(model_name_or_path)
+        elif "e5" in model_name_or_path:
+            query_tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
+            query_encoder = AutoModel.from_pretrained(model_name_or_path)
         else:
             print(f"{model_name_or_path} is not supported!")
             raise AttributeError
