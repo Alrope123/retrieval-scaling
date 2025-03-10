@@ -46,7 +46,16 @@ device = 'cuda' if torch.cuda.is_available()  else 'cpu'
 
 
 def embed_queries(args, queries, model, tokenizer, model_name_or_path):
-    if "sentence-transformers" in model_name_or_path:
+    if "GritLM" in model_name_or_path:
+        all_question = []
+        for k, q in enumerate(queries):
+            if args.lowercase:
+                q = q.lower()
+            if args.normalize_text:
+                q = contriever.src.normalize_text.normalize(q)
+            all_question.append(q)
+        embeddings = model.encode(all_question, batch_size=min(128, args.per_gpu_batch_size), instruction="<|embed|>\n")  # sentence-transformer has extra memory overhead and can only support a smaller batch size
+    elif "sentence-transformers" in model_name_or_path:
         all_question = []
         for k, q in enumerate(queries):
             if args.lowercase:
@@ -248,7 +257,11 @@ def search_dense_topk(cfg):
         logging.info(f"Loading model from: {cfg.model.datastore_encoder}")
         model_name_or_path = cfg.model.query_encoder
         tokenizer_name_or_path = cfg.model.query_tokenizer
-        if "contriever" in model_name_or_path:
+        if "GritLM" in model_name_or_path:
+            from gritlm import GritLM
+            query_tokenizer  = None
+            query_encoder = GritLM("GritLM/GritLM-7B", torch_dtype="auto", mode="embedding")
+        elif "contriever" in model_name_or_path:
             query_encoder, query_tokenizer, _ = contriever.src.contriever.load_retriever(model_name_or_path)
         elif "dragon" in model_name_or_path:
             query_tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)

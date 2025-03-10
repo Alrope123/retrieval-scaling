@@ -34,7 +34,8 @@ device = 'cuda' if torch.cuda.is_available()  else 'cpu'
 def is_sentence_transformers(model_name_or_path):
     return "sentence-transformers" in model_name_or_path or \
             "intfloat" in model_name_or_path or \
-            "Snowflake" in model_name_or_path
+            "Snowflake" in model_name_or_path or \
+            "GritLM" in model_name_or_path
 
 def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):
     if is_sentence_transformers(args.model_name_or_path):
@@ -52,7 +53,10 @@ def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):
             alltext.append(text)
         
         with torch.no_grad():
-            allembeddings = model.encode(alltext, batch_size=64)  # default is 512, but got oom
+            if "GritLM" in args.model_name_or_path:
+                allembeddings = model.encode(alltext, batch_size=64, instruction="<|embed|>\n")
+            else:
+                allembeddings = model.encode(alltext, batch_size=64)  # default is 512, but got oom
         
     else:
         total = 0
@@ -176,7 +180,11 @@ def generate_passage_embeddings(cfg):
         args = cfg.datastore.embedding
         
         logging.info(f"Loading retriever model from {args.model_name_or_path}...")
-        if "contriever" in args.model_name_or_path:
+        if "GritLM" in args.model_name_or_path:
+            from gritlm import GritLM
+            tokenizer  = None
+            model = GritLM("GritLM/GritLM-7B", torch_dtype="auto", mode="embedding")
+        elif "contriever" in args.model_name_or_path:
             model, tokenizer, _ = contriever.src.contriever.load_retriever(args.model_name_or_path)
         elif "dragon" in args.model_name_or_path:
             tokenizer_name_or_path = args.tokenizer if args.get('tokenizer', None) else args.model_name_or_path
