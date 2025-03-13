@@ -252,6 +252,7 @@ def generate_passage_embeddings(cfg):
         if "meta-llama" in args.model_name_or_path:
             tokenizer_name_or_path = args.tokenizer if args.get('tokenizer', None) else args.model_name_or_path
             tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
+            tokenizer.add_special_tokens({'pad_token': '[PAD]'})
             model = AutoModel.from_pretrained(args.model_name_or_path)
         elif "GritLM" in args.model_name_or_path:
             from gritlm import GritLM

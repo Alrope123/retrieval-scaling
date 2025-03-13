@@ -307,6 +307,7 @@ def search_dense_topk(cfg):
         tokenizer_name_or_path = cfg.model.query_tokenizer
         if "meta-llama" in model_name_or_path:
             query_tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
+            query_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
             query_encoder = AutoModel.from_pretrained(model_name_or_path)
         elif "GritLM" in model_name_or_path:
             from gritlm import GritLM
