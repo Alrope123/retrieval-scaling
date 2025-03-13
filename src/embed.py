@@ -57,7 +57,76 @@ def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):
                 allembeddings = model.encode(alltext, batch_size=64, instruction="<|embed|>\n")
             else:
                 allembeddings = model.encode(alltext, batch_size=64)  # default is 512, but got oom
-        
+    
+    elif "meta-llama" in args.model_name_or_path:
+        total = 0
+        allids, allembeddings = [], []
+        batch_ids, batch_text = [], []
+        tot_psgs = len(passages)
+
+        with torch.no_grad():
+            for k, p in tqdm(enumerate(passages)):
+                batch_ids.append(p["id"])
+                
+                # Prepare text for encoding
+                if args.no_title or "title" not in p:
+                    text = p["text"]
+                else:
+                    text = p["title"] + " " + p["text"]
+                if args.lowercase:
+                    text = text.lower()
+                if args.normalize_text:
+                    text = contriever.src.normalize_text.normalize(text)
+                batch_text.append(text)
+
+                if len(batch_text) == args.per_gpu_batch_size or k == tot_psgs - 1:
+                    encoded_batch = tokenizer.batch_encode_plus(
+                        batch_text,
+                        return_tensors="pt",
+                        max_length=args.passage_maxlength,
+                        padding=True,
+                        truncation=True,
+                    )
+
+                    print(f"EMBEDDING UP TO PSG {k} out of {tot_psgs} (in shard {shard_id} of {num_shards})")
+                    encoded_batch = {k: v.cuda() for k, v in encoded_batch.items()}
+                    output = model(**encoded_batch)  # Get model output
+
+                    if "contriever" not in args.model_name_or_path:
+                        hidden_states = output.last_hidden_state  # Shape: (batch_size, seq_len, hidden_dim)
+                        attention_mask = encoded_batch["attention_mask"]  # Shape: (batch_size, seq_len)
+
+                        seq_len = hidden_states.shape[1]  # Get sequence length (L)
+                        indices = torch.arange(1, seq_len + 1, dtype=torch.float32, device=hidden_states.device)  # Token positions
+
+                        # Zero out weights for padding tokens
+                        indices = indices * attention_mask  # Multiply by mask to remove padding influence
+                        weight_sum = torch.sum(indices, dim=1, keepdim=True)  # Sum of non-padding weights per passage
+                        
+                        # Avoid division by zero (handle all-padding cases)
+                        weight_sum = torch.where(weight_sum == 0, torch.tensor(1.0, device=hidden_states.device), weight_sum)
+
+                        # Compute normalized weights
+                        weights = indices / weight_sum  # Normalize weights
+                        weights = weights.unsqueeze(-1)  # Shape: [batch_size, seq_len, 1] for broadcasting
+
+                        # Compute final weighted embedding
+                        weighted_embedding = torch.sum(weights * hidden_states, dim=1)  # Weighted sum over tokens
+
+                        embeddings = weighted_embedding.cpu()
+
+                    total += len(batch_ids)
+                    allids.extend(batch_ids)
+                    allembeddings.append(embeddings)
+
+                    batch_text = []
+                    batch_ids = []
+
+                    if k % 10000 == 0 and k > 0:
+                        print(f"Encoded passages {total}")
+
+        allembeddings = torch.cat(allembeddings, dim=0).numpy()
+
     else:
         total = 0
         allids, allembeddings = [], []
@@ -180,7 +249,11 @@ def generate_passage_embeddings(cfg):
         args = cfg.datastore.embedding
         
         logging.info(f"Loading retriever model from {args.model_name_or_path}...")
-        if "GritLM" in args.model_name_or_path:
+        if "meta-llama" in args.model_name_or_path:
+            tokenizer_name_or_path = args.tokenizer if args.get('tokenizer', None) else args.model_name_or_path
+            tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
+            model = AutoModel.from_pretrained(args.model_name_or_path)
+        elif "GritLM" in args.model_name_or_path:
             from gritlm import GritLM
             tokenizer  = None
             model = GritLM("GritLM/GritLM-7B", torch_dtype="auto", mode="embedding")

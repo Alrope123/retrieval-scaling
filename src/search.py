@@ -75,7 +75,55 @@ def embed_queries(args, queries, model, tokenizer, model_name_or_path):
             all_question.append(q)
         
         embeddings = model.encode(all_question, batch_size=min(128, args.per_gpu_batch_size))  # sentence-transformer has extra memory overhead and can only support a smaller batch size
-    
+    elif "meta-llama" in model_name_or_path:
+        model.eval()
+        embeddings, batch_question = [], []
+
+        with torch.no_grad():
+            for k, q in tqdm(enumerate(queries)):
+                if args.lowercase:
+                    q = q.lower()
+                if args.normalize_text:
+                    q = contriever.src.normalize_text.normalize(q)
+                batch_question.append(q)
+
+                if len(batch_question) == args.per_gpu_batch_size or k == len(queries) - 1:
+                    encoded_batch = tokenizer.batch_encode_plus(
+                        batch_question,
+                        return_tensors="pt",
+                        max_length=args.question_maxlength,
+                        padding=True,
+                        truncation=True,
+                    )
+
+                    encoded_batch = {k: v.to(device) for k, v in encoded_batch.items()}
+                    output = model(**encoded_batch)
+
+                    if "contriever" not in model_name_or_path:
+                        hidden_states = output.last_hidden_state  # Shape: [batch_size, seq_len, hidden_dim]
+                        attention_mask = encoded_batch["attention_mask"]  # Shape: [batch_size, seq_len]
+                        
+                        seq_len = hidden_states.shape[1]  # L (max sequence length)
+                        indices = torch.arange(1, seq_len + 1, dtype=torch.float32, device=device)  # Position indices
+
+                        # Zero out weights for padding tokens
+                        indices = indices * attention_mask  # Zero out padding indices
+                        weight_sum = torch.sum(indices, dim=1, keepdim=True)  # Sum of non-padding weights per sequence
+
+                        # Avoid division by zero (if a sequence is entirely padding, set weight_sum to 1 to prevent NaN)
+                        weight_sum = torch.where(weight_sum == 0, torch.tensor(1.0, device=device), weight_sum)
+
+                        weights = indices / weight_sum  # Normalize weights
+                        weights = weights.unsqueeze(-1)  # Shape: [batch_size, seq_len, 1] for broadcasting
+
+                        # Compute weighted sum, ignoring paddings
+                        weighted_embedding = torch.sum(weights * hidden_states, dim=1)  # Shape: [batch_size, hidden_dim]
+                        embeddings.append(weighted_embedding.cpu())
+
+                    batch_question = []
+
+        embeddings = torch.cat(embeddings, dim=0).numpy()
+
     else:
         model.eval()
         embeddings, batch_question = [], []
@@ -239,7 +287,10 @@ def search_dense_topk(cfg, query_filepath):
         logging.info(f"Loading model from: {cfg.model.datastore_encoder}")
         model_name_or_path = cfg.model.query_encoder
         tokenizer_name_or_path = cfg.model.query_tokenizer
-        if "GritLM" in model_name_or_path:
+        if "meta-llama" in model_name_or_path:
+            query_tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
+            query_encoder = AutoModel.from_pretrained(model_name_or_path)
+        elif "GritLM" in model_name_or_path:
             from gritlm import GritLM
             query_tokenizer  = None
             query_encoder = GritLM("GritLM/GritLM-7B", torch_dtype="auto", mode="embedding")
