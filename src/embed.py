@@ -89,7 +89,7 @@ def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):
                     )
 
                     print(f"EMBEDDING UP TO PSG {k} out of {tot_psgs} (in shard {shard_id} of {num_shards})")
-                    encoded_batch = {k: v.cuda() for k, v in encoded_batch.items()}
+                    encoded_batch = {k: v.to(device) for k, v in encoded_batch.items()}
                     output = model(**encoded_batch)  # Get model output
 
                     if "contriever" not in args.model_name_or_path:
@@ -252,7 +252,7 @@ def generate_passage_embeddings(cfg):
         if "meta-llama" in args.model_name_or_path:
             tokenizer_name_or_path = args.tokenizer if args.get('tokenizer', None) else args.model_name_or_path
             tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
-            tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+            tokenizer.pad_token = tokenizer.eos_token
             model = AutoModel.from_pretrained(args.model_name_or_path)
         elif "GritLM" in args.model_name_or_path:
             from gritlm import GritLM
