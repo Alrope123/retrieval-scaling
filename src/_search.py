@@ -170,7 +170,7 @@ def validate(data, workers_num):
     return match_stats.questions_doc_hits
 
 
-def add_passages_to_eval_data(data, passages, scores, db_ids, valid_query_idx, domain=None):
+def add_passages_to_eval_data(data, domains, passages, scores, db_ids, valid_query_idx, domain=None):
     # add passages to original data
     assert len(valid_query_idx) == len(passages)
     idx = 0
@@ -182,7 +182,7 @@ def add_passages_to_eval_data(data, passages, scores, db_ids, valid_query_idx, d
             d["ctxs"] = [
                 {
                     "id": db_ids[idx][c],
-                    "source": domain,
+                    "source": domains[idx][c],
                     "retrieval text": passages[idx][c],
                     "retrieval score": ex_scores[c],
                 }
@@ -370,11 +370,11 @@ def search_dense_topk(cfg):
                     index = Indexer(cfg)
                     
                     logging.info("Searching for the queries...")
-                    all_scores, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
+                    all_scores, all_domains, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
                     
                     # todo: double check valid_query_idx
                     logging.info(f"Adding documents to eval data...")
-                    add_passages_to_eval_data(copied_data, all_passages, all_scores, db_ids, valid_query_idx, domain=ds_domain)
+                    add_passages_to_eval_data(copied_data, all_domains, all_passages, all_scores, db_ids, valid_query_idx, domain=ds_domain)
                     
                     os.makedirs(os.path.dirname(output_path), exist_ok=True)
                     safe_write_jsonl(copied_data, output_path)
@@ -387,11 +387,11 @@ def search_dense_topk(cfg):
             index = Indexer(cfg)
 
             logging.info("Searching for the queries...")
-            all_scores, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
+            all_scores, all_domains, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
             
             # todo: double check valid_query_idx
             logging.info(f"Adding documents to eval data...")
-            add_passages_to_eval_data(data, all_passages, all_scores, db_ids, valid_query_idx, domain=ds_domain)
+            add_passages_to_eval_data(data, all_domains, all_passages, all_scores, db_ids, valid_query_idx, domain=ds_domain)
             
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             safe_write_jsonl(data, output_path)
