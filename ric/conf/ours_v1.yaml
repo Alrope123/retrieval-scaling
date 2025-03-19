@@ -97,7 +97,7 @@ evaluation:
   concate_k: 3    # Number of retrieved passages for concatenation, 0 means LM-only
   max_retrieval_len: 1024
   calibration_out_dir: null
-  eval_output_dir: ${datastore.embedding.output_dir}/retrieved_results/${model.datastore_encoder}/${datastore.domain}_datastore-${datastore.chunk_size}_chunk_size/top_${evaluation.search.n_docs}
+  eval_output_dir: ${datastore.embedding.output_dir}/retrieved_results/
   results_only_log_file: scaling_out/test_massiveds_ppl.log
   debug_mode: false
   decontamination: false
