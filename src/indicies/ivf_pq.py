@@ -238,7 +238,7 @@ class IVFPQIndexer(object):
         return filename.split("raw_passages")[0].split("--")[0]
 
     def get_retrieved_passages(self, all_indices):
-        domains, passages, db_ids = [], []
+        domains, passages, db_ids = [], [], []
         for query_indices in all_indices:
             domain_per_query = [self._get_domain(int(index_id)) for index_id in query_indices]
             passages_per_query = [self._get_passage(int(index_id))["text"] for index_id in query_indices]
