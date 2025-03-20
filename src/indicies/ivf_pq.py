@@ -235,7 +235,7 @@ class IVFPQIndexer(object):
     def _get_domain(self, index_id):
         shard_id, chunk_id = self.index_id_to_db_id[index_id]
         filename, position = self.psg_pos_id_map[shard_id][chunk_id]
-        return filename.split("raw_passages")[0].split("--")[0]
+        return os.path.basename(filename).split("raw_passages")[0].split("--")[0]
 
     def get_retrieved_passages(self, all_indices):
         domains, passages, db_ids = [], [], []
