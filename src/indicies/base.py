@@ -75,6 +75,6 @@ class Indexer(object):
         
         
     def search(self, query_embs, k=5):
-        all_scores, all_passages, db_ids = self.datastore.search(query_embs, k)
-        return all_scores, all_passages, db_ids
+        all_scores, all_domains, all_passages, db_ids = self.datastore.search(query_embs, k)
+        return all_scores, all_domains, all_passages, db_ids
     
