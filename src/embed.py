@@ -218,6 +218,7 @@ def get_file_paths_and_sizes(args):
         for file in os.listdir(args.raw_data_path):
             file_paths.append(os.path.join(args.raw_data_path, file))
             # file_sizes.append(os.path.getsize(file_path))
+        file_paths = sorted(file_paths)
 
     return file_paths,file_sizes
 
