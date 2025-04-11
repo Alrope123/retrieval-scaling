@@ -22,7 +22,7 @@ model:
 
 datastore:
   domain: c4_dclm_mixed
-  raw_data_path: /weka_data/xinxil/private-retrieval-lm/c4_dclm_mixed/mixed
+  raw_data_path: /weka_data/xinxil/private-retrieval-lm/c4_dclm_mixed
   chunk_size: 256  # chunk size in number of words
   
   embedding:
