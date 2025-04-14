@@ -47,7 +47,7 @@ datastore:
 
     prefix: "passages"
     embedding_dir: ${datastore.embedding.output_dir}/embeddings/${model.datastore_encoder}/${datastore.domain}
-    use_saved_if_exists: false
+    use_saved_if_exists: true
 
   index:
     raw_data_path: ${datastore.raw_data_path}
