@@ -21,7 +21,7 @@ model:
 
 
 datastore:
-  domain: 0
+  domain: lb_full
   raw_data_path: /weka_data/xinxil/private-retrieval-lm/deduped_dataset/lb_full
   chunk_size: 256  # chunk size in number of words
   
