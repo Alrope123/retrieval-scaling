@@ -33,7 +33,7 @@ datastore:
     passages_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1/passages/
     max_files_per_shard: 1
 
-    per_gpu_batch_size: 128
+    per_gpu_batch_size: 64
     passage_maxlength: ${datastore.chunk_size}  # need to set to a larger num than chunk size
     model_name_or_path: ${model.datastore_encoder}
     tokenizer: ${model.datastore_tokenizer}
