@@ -249,13 +249,13 @@ class IVFPQIndexer(object):
         return domains, passages, db_ids
     
     def search(self, query_embs, k=4096):
-        # print("Moving index to GPU...")
-        # res = faiss.StandardGpuResources()
-        # co = faiss.GpuClonerOptions()
-        # co.useFloat16 = True
-        # gpu_index = faiss.index_cpu_to_gpu(res, 0, self.index, co)
-        # gpu_index.verbose = True
-        # print("Finished moving index to GPU...")
+        print("Moving index to GPU...")
+        res = faiss.StandardGpuResources()
+        co = faiss.GpuClonerOptions()
+        co.useFloat16 = True
+        gpu_index = faiss.index_cpu_to_gpu(res, 0, self.index, co)
+        gpu_index.verbose = True
+        print("Finished moving index to GPU...")
         # DEBUG:
         indices_length = len(self.index_id_to_db_id)
         pos_length = 0
