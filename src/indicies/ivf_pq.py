@@ -267,6 +267,50 @@ class IVFPQIndexer(object):
         all_scores, all_indices = self.index.search(query_embs.astype(np.float32), k)
         all_domains, all_passages, db_ids = self.get_retrieved_passages(all_indices)
         return all_scores.tolist(), all_domains, all_passages, db_ids
+    
+
+    def add_new_embeddings(self, new_embed_paths: List[str], new_passage_dir: str = None):
+        """
+        Incrementally adds new embeddings and their passage map entries into the current index.
+        new_passage_dir should point to the directory containing the new passage .jsonl files.
+        """
+        assert hasattr(self, 'index') and self.index.is_trained, "Index must be loaded and trained before adding embeddings."
+        start_shard_id = max([sid for sid, _ in self.index_id_to_db_id], default=-1) + 1
+        start_time = time.time()
+
+        for shard_offset, embed_path in enumerate(new_embed_paths):
+            shard_id = start_shard_id + shard_offset
+            print(f"Adding embeddings from {embed_path} as shard {shard_id}...")
+
+            with open(embed_path, "rb") as fin:
+                _, new_embeds = pickle.load(fin)
+
+            new_embeds = np.array(new_embeds).astype(np.float32)
+            self.index.add(new_embeds)
+
+            new_ids = [[shard_id, i] for i in range(len(new_embeds))]
+            self.index_id_to_db_id.extend(new_ids)
+
+        # Update index and metadata
+        faiss.write_index(self.index, self.index_path)
+        with open(self.meta_file, 'wb') as fout:
+            pickle.dump(self.index_id_to_db_id, fout)
+
+        # Update passage position map
+        if new_passage_dir is not None:
+            print(f"Updating passage position map from: {new_passage_dir}")
+            new_psg_pos_id_map = get_passage_pos_ids(new_passage_dir, None)  # Don't overwrite existing file yet
+            for shard_id, chunk_map in new_psg_pos_id_map.items():
+                new_global_shard_id = start_shard_id + shard_id
+                self.psg_pos_id_map[new_global_shard_id] = chunk_map
+
+            if self.pos_map_save_path is not None:
+                with open(self.pos_map_save_path, 'wb') as f:
+                    pickle.dump(self.psg_pos_id_map, f)
+                print(f"Updated position map saved to {self.pos_map_save_path}")
+
+        print(f"Added {len(new_embed_paths)} new shards in {(time.time() - start_time)/60:.2f} min.")
+
         
 
 

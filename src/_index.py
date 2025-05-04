@@ -59,6 +59,10 @@ def build_dense_index(cfg):
     '''
     index = Indexer(cfg)
 
+def add_to_dense_index(cfg):
+    index = Indexer(cfg)
+    index.add_to()
+
 def get_index_passages_and_id_map(cfg, index_shard_ids=None):
     index_args = cfg.datastore.index
 
@@ -209,3 +213,6 @@ def build_index(cfg):
         build_bm25_index(cfg)
     else:
         build_dense_index(cfg)
+
+def add_to_index(cfg):
+    add_to_dense_index(cfg)

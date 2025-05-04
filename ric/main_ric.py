@@ -5,7 +5,7 @@ from omegaconf.omegaconf import OmegaConf, open_dict
 
 from src.hydra_runner import hydra_runner
 from src.embed import generate_passage_embeddings
-from src._index import build_index
+from src._index import build_index, add_to_index
 #from src.index import build_index
 from src._search import search_topk, post_hoc_merge_topk_multi_domain
 from src.evaluate_perplexity import evaluate_perplexity
@@ -24,6 +24,10 @@ def main(cfg) -> None:
     if cfg.tasks.datastore.get('index', False):
         logging.info("\n\n************** Indexing ***********")
         build_index(cfg)
+
+    if cfg.tasks.datastore.get('add_to_index', False):
+        logging.info("\n\n************** Indexing ***********")
+        add_to_index(cfg)
     
     if cfg.tasks.eval.get('search', False):
         logging.info("\n\n************** Running Search ***********")

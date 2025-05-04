@@ -78,3 +78,18 @@ class Indexer(object):
         all_scores, all_domains, all_passages, db_ids = self.datastore.search(query_embs, k)
         return all_scores, all_domains, all_passages, db_ids
     
+    def add_to(self):
+        import glob
+        embedding_args = self.cfg.datastore.embedding
+        index_args = self.cfg.datastore.index
+        
+        embedding_paths = glob.glob(index_args.new_passages_embeddings)
+        print(f"new_passages_embeddings: {index_args.new_passages_embeddings}")
+        def sort_func(x):
+            domain = x.split("/")[-1].split(f'{embedding_args.prefix}')[0].split('--')[0] 
+            rank, shard_idx = x.split("/")[-1].split(f'{embedding_args.prefix}')[-1].split(".pkl")[0].split("_")
+            return domain, int(rank), int(shard_idx)
+        embedding_paths = sorted(embedding_paths, key=sort_func)
+        embedding_paths = embedding_paths if index_args.num_subsampled_embedding_files == -1 else embedding_paths[0:index_args.num_subsampled_embedding_files]
+
+        self.datastore.add_new_embeddings(embedding_paths, embedding_args.new_passages_dir)
