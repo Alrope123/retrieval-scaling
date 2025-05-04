@@ -278,7 +278,7 @@ class IVFPQIndexer(object):
         start_shard_id = max([sid for sid, _ in self.index_id_to_db_id], default=-1) + 1
         start_time = time.time()
 
-        for shard_offset, embed_path in enumerate(new_embed_paths):
+        for shard_offset, embed_path in enumerate(tqdm(new_embed_paths)):
             shard_id = start_shard_id + shard_offset
             print(f"Adding embeddings from {embed_path} as shard {shard_id}...")
 
@@ -292,6 +292,7 @@ class IVFPQIndexer(object):
             self.index_id_to_db_id.extend(new_ids)
 
         # Update index and metadata
+        print("Writing updated index and metadata...")
         faiss.write_index(self.index, self.index_path)
         with open(self.meta_file, 'wb') as fout:
             pickle.dump(self.index_id_to_db_id, fout)
@@ -299,8 +300,10 @@ class IVFPQIndexer(object):
         # Update passage position map
         if new_passage_dir is not None:
             print(f"Updating passage position map from: {new_passage_dir}")
+            print("Building new position map...")
             new_psg_pos_id_map = get_passage_pos_ids(new_passage_dir, None)  # Don't overwrite existing file yet
-            for shard_id, chunk_map in new_psg_pos_id_map.items():
+            print("Merging new position map with existing one...")
+            for shard_id, chunk_map in tqdm(new_psg_pos_id_map.items()):
                 new_global_shard_id = start_shard_id + shard_id
                 self.psg_pos_id_map[new_global_shard_id] = chunk_map
 
