@@ -26,7 +26,7 @@ def main(cfg) -> None:
         build_index(cfg)
 
     if cfg.tasks.datastore.get('add_to_index', False):
-        logging.info("\n\n************** Indexing ***********")
+        logging.info("\n\n************** Adding Indexing ***********")
         add_to_index(cfg)
     
     if cfg.tasks.eval.get('search', False):
