@@ -306,7 +306,11 @@ def generate_passage_embeddings(cfg):
                     logout.write(json.dumps(shard_passages,indent=4))
             #shard_passages = fast_load_jsonl_shard(args, shard_id) #, return_all_passages=True)
             
-            allids, allembeddings = embed_passages(args, shard_passages, model, tokenizer, shard_id, num_shards)
+            if len(shard_passages) == 0:
+                allids = []
+                allembeddings = np.empty((0, cfg.index.projection_size), dtype=np.float16)
+            else:
+                allids, allembeddings = embed_passages(args, shard_passages, model, tokenizer, shard_id, num_shards)
             os.makedirs(args.embedding_dir, exist_ok=True)
             print(f"Saving {len(allids)} passage embeddings to {embedding_shard_save_path}.")
             with smart_open.open(embedding_shard_save_path, mode="wb") as file:
