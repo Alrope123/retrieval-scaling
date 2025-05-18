@@ -308,7 +308,7 @@ def generate_passage_embeddings(cfg):
             
             if len(shard_passages) == 0:
                 allids = []
-                allembeddings = np.empty((0, cfg.index.projection_size), dtype=np.float16)
+                allembeddings = np.empty((0, cfg.datastore.index.projection_size), dtype=np.float16)
             else:
                 allids, allembeddings = embed_passages(args, shard_passages, model, tokenizer, shard_id, num_shards)
             os.makedirs(args.embedding_dir, exist_ok=True)
