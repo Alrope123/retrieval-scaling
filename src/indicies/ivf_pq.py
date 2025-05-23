@@ -181,6 +181,7 @@ class IVFPQIndexer(object):
         assert index.is_trained and index.ntotal == 0
         
         start_time = time.time()
+        prev_domain = None
         # NOTE: the shard id is a absolute id defined in the name
         for shard_id, embed_path in enumerate(self.embed_paths):
             '''
@@ -191,12 +192,23 @@ class IVFPQIndexer(object):
             '''
             with open(embed_path, "rb") as fin:
                 _, to_add = pickle.load(fin)
-            # print(f"DEBUG: Length of the embedding at {embed_path}: {len(to_add)}")
             index.add(to_add)
             ids_toadd = [[shard_id, chunk_id] for chunk_id in range(len(to_add))]  #TODO: check len(to_add) is correct usage
             self.index_id_to_db_id.extend(ids_toadd)
-            # print(f"DEBUG: Length of the resulting index_id_to_db after {embed_path}: {len(self.index_id_to_db_id)}")
             print ('Added %d / %d shards, (%d min)' % (shard_id+1, len(self.embed_paths), (time.time()-start_time)/60))
+
+            # Save an index when changing domain
+            domain = embed_path.split("/")[-1].split('--')[0]
+            if prev_domain is None:
+                prev_domain = domain
+            if prev_domain != domain:
+                print(f"{prev_domain} is different from {domain}, saving index...")
+                faiss.write_index(index, index_path.replace('.faiss', f'_{prev_domain}.faiss'))
+                with open(self.meta_file.replace('.faiss.meta', f'_{prev_domain}.faiss.meta'), 'wb') as fout:
+                    pickle.dump(self.index_id_to_db_id, fout)
+                print ('Adding took {} s'.format(time.time() - start_time))
+                return index
+            prev_domain = domain
         
         faiss.write_index(index, index_path)
         with open(self.meta_file, 'wb') as fout:
