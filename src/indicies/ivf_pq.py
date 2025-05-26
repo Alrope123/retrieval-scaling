@@ -201,7 +201,7 @@ class IVFPQIndexer(object):
             domain = embed_path.split("/")[-1].split('--')[0]
             if prev_domain is None:
                 prev_domain = domain
-            if prev_domain != domain:
+            if prev_domain != domain and "passages" not in domain:
                 print(f"{prev_domain} is different from {domain}, saving index...")
                 faiss.write_index(index, index_path.replace('.faiss', f'_{prev_domain}.faiss'))
                 with open(self.meta_file.replace('.faiss.meta', f'_{prev_domain}.faiss.meta'), 'wb') as fout:

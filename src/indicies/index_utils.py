@@ -97,9 +97,20 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
         jsonl_files = [filename for filename in filenames if '.jsonl' in filename]
         
         # raw_passages_{i}-{j}-of-{tot}.jsonl
+        deprioritized_domains = ["massiveds-rpj_arxiv", "massiveds-rpj_github", "massiveds-rpj_book", "lb_full"]
+        deprioritized_domains_index = {domain: i+1 for i, domain in enumerate(deprioritized_domains)}
+        def sort_func(x):
+            domain = x.split("/")[-1].split(f'raw_passages')[0].split('--')[0] 
+            rank = int(x.split('passages_')[-1].split("-")[0])
+            shard_idx = int(x.split("-of-")[0].split("-")[-1])
+            if domain not in deprioritized_domains_index:
+                depriortized = 0
+            else:
+                depriortized = deprioritized_domains_index[domain]
+            return depriortized, domain, int(rank), int(shard_idx)
         jsonl_files = sorted(
             jsonl_files,
-            key=lambda x: (x.split('raw_passages')[0].split('--')[0], int(x.split('passages_')[-1].split("-")[0]), int(x.split("-of-")[0].split("-")[-1])))
+            key=sort_func)
 
         pos_id_map = {}
         # print(f"DEBUG: Generating id2pos for {passage_dir}")
