@@ -207,7 +207,6 @@ class IVFPQIndexer(object):
                 with open(self.meta_file.replace('.faiss.meta', f'_{prev_domain}.faiss.meta'), 'wb') as fout:
                     pickle.dump(self.index_id_to_db_id, fout)
                 print ('Adding took {} s'.format(time.time() - start_time))
-                return index
             prev_domain = domain
         
         faiss.write_index(index, index_path)
