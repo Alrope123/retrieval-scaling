@@ -30,7 +30,7 @@ datastore:
     output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1_backup/s2orc
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
-    passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}
+    passages_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1_backup/s2orc/passages
     max_files_per_shard: 1
 
     per_gpu_batch_size: 512
@@ -46,13 +46,13 @@ datastore:
 
 
     prefix: "passages"
-    embedding_dir: ${datastore.embedding.output_dir}/embeddings/${model.datastore_encoder}/${datastore.domain}
+    embedding_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1_backup/s2orc/embeddings/
     use_saved_if_exists: false
 
   index:
     raw_data_path: ${datastore.raw_data_path}
     chunk_size: ${datastore.chunk_size}
-    passages_embeddings: ${datastore.embedding.embedding_dir}/*.pkl
+    passages_embeddings: /weka_data/xinxil/private-retrieval-lm/ours_v1_backup/s2orc/embeddings/*.pkl
     num_subsampled_embedding_files: -1    # Number of subsampled embeddings, use all if pass -1, not supported yet, assume use all embeddings in the dir
     index_shard_ids: null
     save_or_load_index: True
