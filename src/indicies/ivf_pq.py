@@ -196,7 +196,7 @@ class IVFPQIndexer(object):
             ids_toadd = [[shard_id, chunk_id] for chunk_id in range(len(to_add))]  #TODO: check len(to_add) is correct usage
             self.index_id_to_db_id.extend(ids_toadd)
             print ('Added %d / %d shards, (%d min)' % (shard_id+1, len(self.embed_paths), (time.time()-start_time)/60))
-            with open(self.meta_file.replace('.faiss.meta', f'_{time.time() - start_time}.log'), 'w') as fout:
+            with open(self.meta_file.replace('.faiss.meta', f'_.log'), 'w') as fout:
                 fout.write(f"Added {shard_id+1} / {len(self.embed_paths)} shards, ({(time.time()-start_time)/60} min)\n")
 
             # Save an index when changing domain
