@@ -30,6 +30,7 @@ class Indexer(object):
         index_path = os.path.join(index_dir, formatted_index_name)
         meta_file = os.path.join(index_dir, formatted_index_name+'.meta')
         pos_map_save_path = os.path.join(index_dir, 'passage_pos_id_map.pkl')
+        sample_train_path = self.args.sample_train_path if "sample_train_path" in self.args else None
         
         if self.index_type == "Flat":
             self.datastore = FlatIndexer(
@@ -63,7 +64,7 @@ class Indexer(object):
                 passage_dir=passage_dir,
                 pos_map_save_path=pos_map_save_path,
                 sample_train_size=self.args.sample_train_size,
-                sample_train_path=self.args.sample_train_path,
+                sample_train_path=sample_train_path,
                 prev_index_path=None,
                 dimension=self.args.projection_size,
                 ncentroids=self.args.ncentroids,
