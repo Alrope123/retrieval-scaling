@@ -70,6 +70,9 @@ class IVFPQIndexer(object):
         self.n_subquantizers = n_subquantizers
         self.code_size = code_size
 
+        np.random.seed(2025)
+        faiss.rand.seed(2025)
+
         if os.path.exists(index_path) and os.path.exists(self.meta_file):
             print("Loading index...")
             self.index = faiss.read_index(index_path)
