@@ -73,7 +73,6 @@ class IVFPQIndexer(object):
         self.code_size = code_size
 
         np.random.seed(2025)
-        faiss.rand.seed(2025)
 
         if os.path.exists(index_path) and os.path.exists(self.meta_file):
             print("Loading index...")
@@ -173,6 +172,9 @@ class IVFPQIndexer(object):
                                        )
         start_index.nprobe = self.probe
         np.random.seed(1)
+
+        start_index.cp.seed = 2025
+        start_index.pq.cp.seed = 2025 
 
         if self.cuda:
             # Convert to GPU index
