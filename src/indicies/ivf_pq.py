@@ -42,6 +42,7 @@ class IVFPQIndexer(object):
                 passage_dir=None,
                 pos_map_save_path=None,
                 sample_train_size=1000000,
+                sample_train_path=None,
                 prev_index_path=None,
                 dimension=768,
                 dtype=np.float16,
@@ -63,6 +64,7 @@ class IVFPQIndexer(object):
         self.cuda = False
 
         self.sample_size = sample_train_size
+        self.sample_path = sample_train_path
         self.dimension = dimension
         self.ncentroids = ncentroids
         self.probe = probe
@@ -132,19 +134,28 @@ class IVFPQIndexer(object):
     '''
 
     def _sample_and_train_index(self,):
-        print(f"Sampling {self.sample_size} examples from {len(self.embed_paths)} files...")
-        per_shard_sample_size = self.sample_size // len(self.embed_paths)
-        all_sampled_embs = []
-        for embed_path in self.embed_paths:
-            print(f"Loading pickle embedding from {embed_path}...")
-            with open(embed_path, "rb") as fin:
-                _, embeddings = pickle.load(fin)
-            shard_size = len(embeddings)
-            print(f"Finished loading, sampling {per_shard_sample_size} from {shard_size} for training...")
-            random_samples = np.random.choice(np.arange(shard_size), size=[min(per_shard_sample_size, shard_size)], replace=False)
-            sampled_embs = embeddings[random_samples]
-            all_sampled_embs.extend(sampled_embs)
-        all_sampled_embs = np.stack(all_sampled_embs).astype(np.float32)
+        if not os.path.exists(self.sample_path):
+            print(f"Sampling {self.sample_size} examples from {len(self.embed_paths)} files...")
+            per_shard_sample_size = self.sample_size // len(self.embed_paths)
+            all_sampled_embs = []
+            for embed_path in self.embed_paths:
+                print(f"Loading pickle embedding from {embed_path}...")
+                with open(embed_path, "rb") as fin:
+                    _, embeddings = pickle.load(fin)
+                shard_size = len(embeddings)
+                print(f"Finished loading, sampling {per_shard_sample_size} from {shard_size} for training...")
+                random_samples = np.random.choice(np.arange(shard_size), size=[min(per_shard_sample_size, shard_size)], replace=False)
+                sampled_embs = embeddings[random_samples]
+                all_sampled_embs.extend(sampled_embs)
+            all_sampled_embs = np.stack(all_sampled_embs).astype(np.float32)
+        else:
+            print(f"Loading sampled embeddings from {self.sample_path}...")
+            with open(self.sample_path, "rb") as fin:
+                start_time = time.time()
+                all_sampled_embs = pickle.load(fin)
+                end_time = time.time()
+            print(f"Finished loading sampled embeddings in {end_time - start_time:.2f} seconds.")
+        print(f"Sampled {len(all_sampled_embs)} embeddings for training...")
         
         print ("Training index...")
         start_time = time.time()

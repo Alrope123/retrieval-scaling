@@ -63,6 +63,7 @@ class Indexer(object):
                 passage_dir=passage_dir,
                 pos_map_save_path=pos_map_save_path,
                 sample_train_size=self.args.sample_train_size,
+                sample_train_path=self.args.sample_train_path,
                 prev_index_path=None,
                 dimension=self.args.projection_size,
                 ncentroids=self.args.ncentroids,
