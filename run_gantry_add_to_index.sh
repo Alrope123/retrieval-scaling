@@ -18,6 +18,7 @@ gantry run \
     --leader-selection \
     --gpus 0 \
     --not-preemptible \
+    --memory 1900GiB \
     --replicas 1 \
     --cluster "${CLUSTER}" \
     --budget ai2/oe-data \

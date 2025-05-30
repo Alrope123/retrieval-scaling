@@ -141,4 +141,8 @@ class FlatIndexer(object):
     def search(self, query_embs, k=4096):
         all_scores, all_indices = self.index.search(query_embs.astype(np.float32), k)
         all_passages, db_ids = self.get_retrieved_passages(all_indices)
-        return all_scores.tolist(), all_passages, db_ids
+        
+        # Dummy domain names to satisfy the rest of the pipeline
+        all_domains = [["flat"] * k for _ in range(len(all_passages))]
+
+        return all_scores.tolist(), all_domains, all_passages, db_ids
