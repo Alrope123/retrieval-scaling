@@ -62,9 +62,9 @@ To evaluate on the search results, refer to this repository: https://github.com/
 - Config file overview: there are parameters for vector building and evaluation in the files as well, but you will not use most of them. Focus on `datastore.index` which contains the parameters for index building and searching. You also want to turn on the boolean values `tasks.datastore.index` when building index and `task.eval.search` when searching (probably though cli instead of modifying the file).
 
 ### Important parameters:
-- `datastore.index.ncentroids`: number of clusters. Theoretically it is positively correlated with build speed and negatively correlated with search speed.
+- `datastore.index.ncentroids`: number of clusters. Theoretically it is positively correlated with build speed and negatively correlated with search speed. The recommand value is $`\sqrt{\# vector}`$.
 - `datastore.index.n_subquantizers`: number of quantizer.  Theoretically it is positively correlated with precision and resulting index size (linearly).
-- `datastore.index.sample_train_size`: number of the sample size for training the index. The recommanded value is `sample_train_size ≈ max(100,000, min(100 × ncentroids, # vectors))`
+- `datastore.index.sample_train_size`: number of the sample size for training the index. The recommanded value is `sample_train_size ≈ max(100,000, min(100 × ncentroids, # vectors))`.
 - `datastore.search.probe` : number of probes. Theoretical it's positively correlated with precision and search speed.
 
 ## Building an index aggregating all data sources
