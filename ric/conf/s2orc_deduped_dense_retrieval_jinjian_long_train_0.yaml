@@ -59,7 +59,7 @@ datastore:
     no_fp16: False
     index_type: IVFPQ
     sample_train_size: 10000000
-    sample_train_path: /weka_data/xinxil/private-retrieval-lm/ours_v1/s2orc/embeddings/facebook/contriever-msmarco/s2orc/embeddings_sampled_10000000.pkl
+    sample_train_path: /weka_data/xinxil/private-retrieval-lm/ours_v1/s2orc/embeddings/facebook/contriever-msmarco/s2orc/samples/embeddings_sampled_10000000.pkl
     indexing_batch_size: 1000000
     projection_size: 768
     probe: 256 #64 #8
