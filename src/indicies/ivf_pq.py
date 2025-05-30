@@ -133,7 +133,7 @@ class IVFPQIndexer(object):
     '''
 
     def _sample_and_train_index(self,):
-        if not os.path.exists(self.sample_path):
+        if self.sample_path is None or not os.path.exists(self.sample_path):
             print(f"Sampling {self.sample_size} examples from {len(self.embed_paths)} files...")
             per_shard_sample_size = self.sample_size // len(self.embed_paths)
             all_sampled_embs = []
