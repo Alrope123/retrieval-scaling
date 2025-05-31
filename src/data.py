@@ -97,6 +97,10 @@ def fast_load_jsonl_shard_full_files(args,file_paths,rank,shard_index, shard_sta
     chunk_sz = args.chunk_size
     min_chunk_sz = args.get('min_chunk_sz', 0)
     keep_last = args.get('keep_last_chunk', True)
+    chunking_strategy = args.get('chunking_strategy', 'fixed_size')
+
+    ## DEBUG:
+    print(f"Chunking strategy: {chunking_strategy}")
 
     passage_shard_save_path = os.path.join(args.passages_dir, f'raw_passages_{rank}-{shard_index}-of-{num_shards}.pkl')
     
@@ -108,7 +112,7 @@ def fast_load_jsonl_shard_full_files(args,file_paths,rank,shard_index, shard_sta
                 line = line.strip()
                 if line:
                     ex = json.loads(line)
-                    chunks = split_data_into_chunks(ex['text'].strip(), chunk_sz, min_chunk_sz, keep_last)
+                    chunks = split_data_into_chunks(ex['text'].strip(), chunk_sz, min_chunk_sz, keep_last, chunking_strategy=chunking_strategy)
                     for chunk in chunks:
                         '''
                         pass_dict = {
@@ -267,7 +271,21 @@ def split_data_into_chunks(text, chunk_sz, min_chunk_sz, keep_last, chunking_str
         from semantic_text_splitter import TextSplitter
         splitter = TextSplitter.from_tiktoken_model("gpt-3.5-turbo", chunk_sz)
         chunks = splitter.chunks(text)
+    elif chunking_strategy == 'sliding_window':
+        words = text.split()
+        step = chunk_sz // 2
+        chunks = []
+        i = 0
+        while i < len(words):
+            chunk = words[i:i + chunk_sz]
+            if not keep_last and len(chunk) < chunk_sz:
+                break
+            chunks.append(' '.join(chunk))
+            i += step
 
+        if len(chunks) > 1 and len(chunks[-1].split()) < min_chunk_sz:
+            last_chunk = chunks.pop()
+            chunks[-1] += ' ' + last_chunk
     return chunks
 
 
