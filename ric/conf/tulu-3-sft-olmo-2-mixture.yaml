@@ -22,7 +22,7 @@ model:
 
 datastore:
   domain: s2orc
-  raw_data_path: /weka/jiachengl/he-infinigram-api/raw/tulu-3-sft-olmo-2-mixture
+  raw_data_path: /weka_training/jiachengl/he-infinigram-api/raw/tulu-3-sft-olmo-2-mixture
   chunk_size: 4096  # chunk size in number of words
   
   embedding:
