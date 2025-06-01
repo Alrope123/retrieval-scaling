@@ -56,7 +56,7 @@ def embed_queries(args, queries, model, tokenizer, model_name_or_path):
             all_question.append(q)
 
         embeddings = model.encode(all_question, batch_size=min(128, args.per_gpu_batch_size), instruction="<|embed|>\n")  # sentence-transformer has extra memory overhead and can only support a smaller batch size
-    elif "sentence-transformers" in model_name_or_path:
+    elif "sentence-transformers" in model_name_or_path or "nomic" in model_name_or_path:
         all_question = []
         for k, q in enumerate(queries):
             if args.lowercase:

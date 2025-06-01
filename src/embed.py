@@ -35,7 +35,8 @@ def is_sentence_transformers(model_name_or_path):
     return "sentence-transformers" in model_name_or_path or \
             "intfloat" in model_name_or_path or \
             "Snowflake" in model_name_or_path or \
-            "GritLM" in model_name_or_path
+            "GritLM" in model_name_or_path or \
+            "nomic" in model_name_or_path
 
 def embed_passages(args, passages, model, tokenizer, shard_id, num_shards):
     if is_sentence_transformers(args.model_name_or_path):
