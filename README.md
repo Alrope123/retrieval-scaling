@@ -45,7 +45,7 @@ python -m ric.main_ric \
     datastore.index.passages_embeddings your/local/directory/s2orc/embeddings/facebook/contriever-msmarco/s2orc/*.pkl
 ```
 
-To search with the queries for MMLU with the built index:
+To search top-100 passages with the queries for MMLU with the built index:
 ```bash
 python -m ric.main_ric \
     --config-name s2orc_deduped_dense_retrieval.yaml \
@@ -55,6 +55,16 @@ python -m ric.main_ric \
 ```
 
 To evaluate on the search results, refer to this repository: https://github.com/allenai/private-retrieval-lm/tree/main
+
+## Custom search queries
+To search custom queries, the search queries are expected to be in a jsonl file with the following format:
+```
+{"text": xxx...}
+{"text": xxx...}
+{"text": xxx...}
+```
+where each json object should contains a field "text" whose value is a query. Any other field will be perserved in the result file. 
+Pass the path of the query file to `evaluation.data.eval_data`. Pass the desired number of passages to `evaluation.search.n_docs` (default to be 100).
 
 ## Hyperparameters for indexing and search
 ### Config file
