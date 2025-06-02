@@ -63,7 +63,8 @@ To search custom queries, the search queries are expected to be in a jsonl file 
 {"text": xxx...}
 {"text": xxx...}
 ```
-where each json object should contains a field "text" whose value is a query. Any other field will be perserved in the result file. 
+where each json object should contains a field `text` whose value is a query. Any other field will be perserved in the result file. 
+
 Pass the path of the query file to `evaluation.data.eval_data`. Pass the desired number of passages to `evaluation.search.n_docs` (default to be 100).
 
 ## Hyperparameters for indexing and search
