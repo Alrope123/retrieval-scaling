@@ -74,7 +74,7 @@ Pass the path of the query file to `evaluation.data.eval_data`. Pass the desired
 ### Important parameters:
 - `datastore.index.ncentroids`: number of clusters. Theoretically it is positively correlated with build speed and negatively correlated with search speed. The recommand value is $`\sqrt{\# vector}`$.
 - `datastore.index.n_subquantizers`: number of quantizer.  Theoretically it is positively correlated with precision and resulting index size (linearly).
-- `datastore.index.sample_train_size`: number of the sample size for training the index. The recommanded value is `sample_train_size ≈ max(100,000, min(100 × ncentroids, # vectors))`.
+- `datastore.index.sample_train_size`: number of the sample size for training the index. The recommanded value is 1% - 10% of the total number of vectors.
 - `datastore.search.probe` : number of probes. Theoretical it's positively correlated with precision and search speed.
 
 ## Building an index aggregating all data sources
