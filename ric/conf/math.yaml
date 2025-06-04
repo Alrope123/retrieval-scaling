@@ -22,7 +22,7 @@ model:
 
 datastore:
   domain: s2orc
-  raw_data_path: /weka_data/ai2-llm/pretraining-data/sources/dolmino-mix-1124/documents/math
+  raw_data_path: /weka_data/ai2-llm/pretraining-data/sources/dolmino-mix-1124/documents/math_all
   chunk_size: 512  # chunk size in number of words
   
   embedding:
