@@ -9,6 +9,7 @@ tasks:
     search: false  # search top-k offline
     merge_search: false  # merge searched results from multiple sources
     inference: false  # run inference with LM
+    exact_rerank: false # rerank using exact_rerank.py
 
 model:
   sparse_retriever: null  # choices: null, bm25
@@ -17,6 +18,8 @@ model:
   query_tokenizer: facebook/contriever-msmarco
   query_encoder: facebook/contriever-msmarco
   datastore_encoder: facebook/contriever-msmarco
+  exact_encoder: GritLM/GritLM-7B
+  exact_tokenizer: null
   lm_model: meta-llama/Llama-3.1-8B-Instruct    # LM for evaluation
 
 
@@ -69,7 +72,7 @@ datastore:
 
 
 evaluation:
-  domain: mmlu
+  domain: gpqa
   search:
     n_docs: 100
     per_gpu_batch_size: 64    # Batch size for query encoding
@@ -83,10 +86,11 @@ evaluation:
     merged_path: null  # path to save the multi-source merged results
     topk_subsample_p: 1  # subsample from the top-k with coin flipping with prob p if p < 1
     subsample_seed: 1000
-    rerank_method: null  # rerank the results based on the method specified here (supported: lexical) *currently only support multi-dource situation
+    rerank_method: null  # rerank the results based on the method specified here (supported: lexical) *currently only support multi-source situation
     answer_path: null  # path to load answers for lm-eval
     rerank_n_docs: null  # number of documents used for reranking, set to null if not removing any data
     use_saved_dedup_data: false  # reuse the saved dedupped data for efficient subsampling
+    exact_embedding_cache_path: null
   data:
     eval_data: s3://ai2-llm/pretraining-data/sources/ds-olmo-data/oracle_retrieval/mmlu/out/cot_queries.jsonl
     max_eval_data_seq_length: 1024

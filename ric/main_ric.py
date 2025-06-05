@@ -35,7 +35,7 @@ def main(cfg) -> None:
         search_topk(cfg)
 
     if cfg.tasks.eval.get('exact_rerank', False):
-        logging.info("\n\n************** Running Search ***********")
+        logging.info("\n\n************** Running Exact Rerank ***********")
         exact_rerank_topk(cfg)
     
     if cfg.tasks.eval.get('merge_search', False):

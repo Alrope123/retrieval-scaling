@@ -215,7 +215,8 @@ class IVFPQIndexer(object):
             print ('Added %d / %d shards, (%d min)' % (shard_id+1, len(self.embed_paths), (time.time()-start_time)/60))
             with open(self.meta_file.replace('.faiss.meta', f'_.log'), 'w') as fout:
                 fout.write(f"Added {shard_id+1} / {len(self.embed_paths)} shards, ({(time.time()-start_time)/60} min)\n")
-
+            
+            # This part should be commented out when testing on a single datastore.
             # Save an index when changing domain -- this is not needed for single datastore
             # domain = embed_path.split("/")[-1].split('--')[0]
             # if prev_domain is None:

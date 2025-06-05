@@ -136,26 +136,35 @@ def embed_queries(args, queries, model, tokenizer, model_name_or_path, cached_em
     return cached_embeddings
 
 
+# def get_search_output_path(cfg, index_shard_ids=None):
+#     eval_args = cfg.evaluation
+#     if index_shard_ids:
+#         shards_postfix = '_'.join([str(shard_id) for shard_id in index_shard_ids])
+#         output_dir = os.path.join(eval_args.eval_output_dir, shards_postfix)
+#     else:
+#         output_dir = eval_args.eval_output_dir
+    
+#     index_type = cfg.datastore.index.index_type
+#     if "IVF" in index_type:
+#         postfix = f"_{index_type}.{cfg.datastore.index.ncentroids}"
+#         if "PQ" in index_type:
+#             postfix = f"{postfix}.{cfg.datastore.index.n_subquantizers}"
+#         postfix = f"{postfix}.{cfg.datastore.index.probe}"
+#     else:
+#         postfix = ""
+
+#     output_path = os.path.join(output_dir + postfix, os.path.basename(eval_args.data.eval_data).replace('.jsonl', '_retrieved_results.jsonl'))
+#     return output_path
+
+# I am using this simpler alternative
 def get_search_output_path(cfg, index_shard_ids=None):
     eval_args = cfg.evaluation
-    if index_shard_ids:
-        shards_postfix = '_'.join([str(shard_id) for shard_id in index_shard_ids])
-        output_dir = os.path.join(eval_args.eval_output_dir, shards_postfix)
-    else:
-        output_dir = eval_args.eval_output_dir
-    
-    index_type = cfg.datastore.index.index_type
-    if "IVF" in index_type:
-        postfix = f"_{index_type}.{cfg.datastore.index.ncentroids}"
-        if "PQ" in index_type:
-            postfix = f"{postfix}.{cfg.datastore.index.n_subquantizers}"
-        postfix = f"{postfix}.{cfg.datastore.index.probe}"
-    else:
-        postfix = ""
+    # Expect the directory to contain exactly one JSONL file
+    for file in os.listdir(eval_args.eval_output_dir):
+        if file.endswith(".jsonl"):
+            return os.path.join(eval_args.eval_output_dir, file)
 
-    output_path = os.path.join(output_dir + postfix, os.path.basename(eval_args.data.eval_data).replace('.jsonl', '_retrieved_results.jsonl'))
-    return output_path
-
+    raise FileNotFoundError(f"No .jsonl file found in override directory: {eval_args.eval_output_dir}")
 
 
 def exact_rerank_topk(cfg):
