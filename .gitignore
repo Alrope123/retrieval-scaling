@@ -8,4 +8,7 @@ scripts/
 lm_eval.egg-info/
 *.jsonl
 *.txt
+data/
+temp_storage/
+faiss_ivfpq_search_*/
 

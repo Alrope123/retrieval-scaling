@@ -216,17 +216,17 @@ class IVFPQIndexer(object):
             with open(self.meta_file.replace('.faiss.meta', f'_.log'), 'w') as fout:
                 fout.write(f"Added {shard_id+1} / {len(self.embed_paths)} shards, ({(time.time()-start_time)/60} min)\n")
 
-            # Save an index when changing domain
-            domain = embed_path.split("/")[-1].split('--')[0]
-            if prev_domain is None:
-                prev_domain = domain
-            if prev_domain != domain and "passages" not in domain:
-                print(f"{prev_domain} is different from {domain}, saving index...")
-                faiss.write_index(index, index_path.replace('.faiss', f'_{prev_domain}.faiss'))
-                with open(self.meta_file.replace('.faiss.meta', f'_{prev_domain}.faiss.meta'), 'wb') as fout:
-                    pickle.dump(self.index_id_to_db_id, fout)
-                print ('Adding took {} s'.format(time.time() - start_time))
-            prev_domain = domain
+            # Save an index when changing domain -- this is not needed for single datastore
+            # domain = embed_path.split("/")[-1].split('--')[0]
+            # if prev_domain is None:
+            #     prev_domain = domain
+            # if prev_domain != domain and "passages" not in domain:
+            #     print(f"{prev_domain} is different from {domain}, saving index...")
+            #     faiss.write_index(index, index_path.replace('.faiss', f'_{prev_domain}.faiss'))
+            #     with open(self.meta_file.replace('.faiss.meta', f'_{prev_domain}.faiss.meta'), 'wb') as fout:
+            #         pickle.dump(self.index_id_to_db_id, fout)
+            #     print ('Adding took {} s'.format(time.time() - start_time))
+            # prev_domain = domain
         
         faiss.write_index(index, index_path)
         with open(self.meta_file, 'wb') as fout:
@@ -294,8 +294,17 @@ class IVFPQIndexer(object):
                 pos_length += 1
         print([indices_length, pos_length])
         # assert False, [indices_length, pos_length]
+
+        # Added timer to measure delay
+        start_time = time.time()
         all_scores, all_indices = self.index.search(query_embs.astype(np.float32), k)
         all_domains, all_passages, db_ids = self.get_retrieved_passages(all_indices)
+        tot_latency = (time.time() - start_time) 
+        latency = (time.time() - start_time) / len(query_embs)
+        logging.info(f"Average retrieval latency per query: {latency:.4f} seconds")
+        logging.info(f"Total retrieval latency for batch of {len(query_embs)} queries: {tot_latency:.4f} seconds")
+        # all_scores, all_indices = self.index.search(query_embs.astype(np.float32), k)
+        # all_domains, all_passages, db_ids = self.get_retrieved_passages(all_indices)
         return all_scores.tolist(), all_domains, all_passages, db_ids
     
 

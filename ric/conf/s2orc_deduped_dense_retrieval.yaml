@@ -3,10 +3,10 @@ name: default
 tasks:
   datastore:
     embedding: false
-    index: false
+    index: false # Turned through CLI on when building index
   eval: 
     task_name: gen  # task name is used to load the eval data. Options:["perplexity", "lm-eval"].
-    search: false  # search top-k offline
+    search: false  # search top-k offline. Turned on through CLI when searching
     merge_search: false  # merge searched results from multiple sources
     inference: false  # run inference with LM
 
@@ -27,10 +27,10 @@ datastore:
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1/s2orc
+    output_dir: ./data
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
-    passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}
+    passages_dir: data/indices/passages/s2orc
     max_files_per_shard: 1
 
     per_gpu_batch_size: 512
@@ -52,20 +52,21 @@ datastore:
   index:
     raw_data_path: ${datastore.raw_data_path}
     chunk_size: ${datastore.chunk_size}
-    passages_embeddings: ${datastore.embedding.embedding_dir}/*.pkl
+    passages_embeddings: data/indices/embeddings/facebook/contriever-msmarco/s2orc/*.pkl
     num_subsampled_embedding_files: -1    # Number of subsampled embeddings, use all if pass -1, not supported yet, assume use all embeddings in the dir
     index_shard_ids: null
     save_or_load_index: True
     no_fp16: False
-    index_type: IVFPQ
+    index_type: Flat
+    # index_type: Flat
     sample_train_size: 100000
     indexing_batch_size: 1000000
     projection_size: 768
-    probe: 256 #64 #8
-    ncentroids: 2048 # 4096 in silo 
-    n_subquantizers: 256 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
+    #probe: 256 #64 #8
+    # ncentroids: 2048 # 4096 in silo 
+    n_subquantizers: 0 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
     n_bits: 8    # Number of bits per subquantizer, introducing compression rate of embedding_precision / n_bits
-    overwrite: false
+    overwrite: True
 
 
 evaluation:

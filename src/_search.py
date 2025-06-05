@@ -370,8 +370,12 @@ def search_dense_topk(cfg):
                     index = Indexer(cfg)
                     
                     logging.info("Searching for the queries...")
+                    start_time = time.time()
                     all_scores, all_domains, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
-                    
+                    end_time = time.time()
+                    latency = (end_time - start_time) / len(questions_embedding)
+                    logging.info(f"Per-query retrieval latency 1: {latency:.4f} seconds")
+                    logging.info(f"Total latencty 1: {(end_time - start_time):.4f} seconds")
                     # todo: double check valid_query_idx
                     logging.info(f"Adding documents to eval data...")
                     add_passages_to_eval_data(copied_data, all_domains, all_passages, all_scores, db_ids, valid_query_idx, domain=ds_domain)
@@ -387,7 +391,13 @@ def search_dense_topk(cfg):
             index = Indexer(cfg)
 
             logging.info("Searching for the queries...")
+            start_time = time.time()
             all_scores, all_domains, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
+            end_time = time.time()
+            latency = (end_time - start_time) / len(questions_embedding)
+            logging.info(f"Per-query retrieval latency 2: {latency:.4f} seconds")
+            logging.info(f"Total latencty 2: {(end_time - start_time):.4f} seconds")
+            #all_scores, all_domains, all_passages, db_ids = index.search(questions_embedding, eval_args.search.n_docs)
             
             # todo: double check valid_query_idx
             logging.info(f"Adding documents to eval data...")
