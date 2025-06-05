@@ -8,7 +8,7 @@ from src.embed import generate_passage_embeddings
 from src._index import build_index, add_to_index
 #from src.index import build_index
 from src._search import search_topk, post_hoc_merge_topk_multi_domain
-from exact_rerank import exact_rerank_topk
+from src.exact_rerank import exact_rerank_topk
 from src.evaluate_perplexity import evaluate_perplexity
 
 
