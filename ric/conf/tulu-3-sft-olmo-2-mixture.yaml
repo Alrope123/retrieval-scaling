@@ -21,13 +21,13 @@ model:
 
 
 datastore:
-  domain: s2orc
+  domain: tulu-3-sft-olmo-2-mixture
   raw_data_path: /weka_training/jiachengl/he-infinigram-api/raw/tulu-3-sft-olmo-2-mixture
   chunk_size: 512  # chunk size in number of words
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/xinxil/olmo/s2orc/tulu-3-sft-olmo-2-mixture
+    output_dir: /weka_data/xinxil/olmo/post-training/tulu-3-sft-olmo-2-mixture
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     chunking_strategy: sliding_window    # sliding_window or fixed_size
@@ -58,7 +58,7 @@ datastore:
     index_shard_ids: null
     save_or_load_index: True
     no_fp16: False
-    index_type: IVFPQ
+    index_type: Flat
     sample_train_size: 100000
     indexing_batch_size: 1000000
     projection_size: 768
