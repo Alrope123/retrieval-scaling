@@ -38,7 +38,7 @@ aws s3 sync s3://ai2-llm/pretraining-data/sources/ds-olmo-data/queries your/loca
 ## Quick Start
 To build an index with pes2o:
 ```bash
-python -m ric.main_ric \
+python -m src.main_ric \
     --config-name s2orc_deduped_dense_retrieval.yaml \
     tasks.datastore.index=true \
     datastore.embedding.passages_dir=your/local/directory/s2orc/passages \
@@ -47,7 +47,7 @@ python -m ric.main_ric \
 
 To search with the queries for MMLU with the built index:
 ```bash
-python -m ric.main_ric \
+python -m src.main_ric \
     --config-name s2orc_deduped_dense_retrieval.yaml \
     tasks.eval.task_name=lm-eval \
     tasks.eval.search=true \
