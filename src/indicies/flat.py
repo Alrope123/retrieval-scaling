@@ -129,20 +129,28 @@ class FlatIndexer(object):
             shard_id, chunk_id = 0, self.index_id_to_db_id[index_id]
         return self._id2psg(shard_id, chunk_id)
     
+    def _get_domain(self, index_id):
+        shard_id, chunk_id = self.index_id_to_db_id[index_id]
+        filename, position = self.psg_pos_id_map[shard_id][chunk_id]
+        return os.path.basename(filename).split("raw_passages")[0].split("--")[0]
+
     def get_retrieved_passages(self, all_indices):
-        passages, db_ids = [], []
+        domains, passages, db_ids = [], [], []
         for query_indices in all_indices:
+            domain_per_query = [self._get_domain(int(index_id)) for index_id in query_indices]
             passages_per_query = [self._get_passage(int(index_id))["text"] for index_id in query_indices]
             db_ids_per_query = [self.index_id_to_db_id[int(index_id)] for index_id in query_indices]
+            domains.append(domain_per_query)
             passages.append(passages_per_query)
             db_ids.append(db_ids_per_query)
-        return passages, db_ids
+        return domains, passages, db_ids
     
     def search(self, query_embs, k=4096):
+        indices_length = len(self.index_id_to_db_id)
+        pos_length = 0
+        for shard_id in self.psg_pos_id_map:
+            for chunk_id in self.psg_pos_id_map[shard_id]:
+                pos_length += 1
         all_scores, all_indices = self.index.search(query_embs.astype(np.float32), k)
-        all_passages, db_ids = self.get_retrieved_passages(all_indices)
-        
-        # Dummy domain names to satisfy the rest of the pipeline
-        all_domains = [["flat"] * k for _ in range(len(all_passages))]
-
+        all_domains, all_passages, db_ids = self.get_retrieved_passages(all_indices)
         return all_scores.tolist(), all_domains, all_passages, db_ids

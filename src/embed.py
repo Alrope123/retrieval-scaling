@@ -22,12 +22,10 @@ from pathlib import Path
 from transformers import AutoTokenizer, AutoModel
 from sentence_transformers import SentenceTransformer
 
-import contriever.src.slurm
 import contriever.src.contriever
-import contriever.src.utils
 import contriever.src.normalize_text
 
-from src.data import fast_load_jsonl_shard, fast_load_jsonl_shard_full_files
+from src.data import fast_load_jsonl_shard_full_files
 
 device = 'cuda' if torch.cuda.is_available()  else 'cpu'
 

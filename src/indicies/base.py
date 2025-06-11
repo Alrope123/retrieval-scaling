@@ -17,7 +17,8 @@ class Indexer(object):
         self.index_type = self.args.index_type
         
         passage_dir = self.cfg.datastore.embedding.passages_dir
-        index_dir, embedding_paths = get_index_dir_and_embedding_paths(cfg)
+        deprioritized_domains = self.args.get('deprioritized_domains', [])
+        index_dir, embedding_paths = get_index_dir_and_embedding_paths(cfg, deprioritized_domains=deprioritized_domains)
         os.makedirs(index_dir, exist_ok=True)
         # logging.info(f"Indexing for passages: {embedding_paths}")
         if "IVF" in self.index_type:
@@ -31,6 +32,7 @@ class Indexer(object):
         meta_file = os.path.join(index_dir, formatted_index_name+'.meta')
         pos_map_save_path = os.path.join(index_dir, 'passage_pos_id_map.pkl')
         sample_train_path = self.args.sample_train_path if "sample_train_path" in self.args else None
+        save_intermediate_index = self.args.save_intermediate_index if "save_intermediate_index" in self.args else False
         
         if self.index_type == "Flat":
             self.datastore = FlatIndexer(
@@ -62,10 +64,12 @@ class Indexer(object):
                 meta_file=meta_file,
                 trained_index_path=trained_index_path,
                 passage_dir=passage_dir,
+                deprioritized_domains=deprioritized_domains,
                 pos_map_save_path=pos_map_save_path,
                 sample_train_size=self.args.sample_train_size,
                 sample_train_path=sample_train_path,
                 prev_index_path=None,
+                save_intermediate_index=save_intermediate_index,
                 dimension=self.args.projection_size,
                 ncentroids=self.args.ncentroids,
                 probe=self.args.probe,

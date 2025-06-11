@@ -4,13 +4,9 @@ import csv
 import pickle
 import gzip
 import logging
-import pdb
 
 import numpy as np
 import transformers
-from src.indicies.index_utils import convert_pkl_to_jsonl, get_passage_pos_ids
-
-import boto3
 import smart_open
 
 ############################## Training ##############################

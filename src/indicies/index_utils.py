@@ -6,7 +6,7 @@ import re
 import glob
 
 
-def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None):
+def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None, deprioritized_domains=[]):
     embedding_args = cfg.datastore.embedding
     index_args = cfg.datastore.index
     index_type = cfg.datastore.index.index_type
@@ -27,7 +27,7 @@ def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None):
         embedding_paths = glob.glob(index_args.passages_embeddings)
         print(f"passages_embeddings: {index_args.passages_embeddings}")
         # put some domains to the back
-        deprioritized_domains = ["massiveds-rpj_arxiv", "massiveds-rpj_github", "massiveds-rpj_book", "lb_full"]
+        # ["massiveds-rpj_arxiv", "massiveds-rpj_github", "massiveds-rpj_book", "lb_full"]
         deprioritized_domains_index = {domain: i+1 for i, domain in enumerate(deprioritized_domains)}
         def sort_func(x):
             domain = x.split("/")[-1].split(f'{embedding_args.prefix}')[0].split('--')[0] 
@@ -85,19 +85,13 @@ def convert_pkl_to_jsonl(passage_dir):
                 f.write('\n')
     print("All pickle files have been converted to JSONL files.")
 
-def get_passage_pos_ids(passage_dir, pos_map_save_path):
-    # DEBUG
-    # if os.path.exists(pos_map_save_path):
-    #     with open(pos_map_save_path, 'rb') as f:
-    #         pos_id_map = pickle.load(f)
-    #     return pos_id_map
-
+def get_passage_pos_ids(passage_dir, pos_map_save_path, deprioritized_domains=[]):
     if os.path.isdir(passage_dir):
         filenames = os.listdir(passage_dir)
         jsonl_files = [filename for filename in filenames if '.jsonl' in filename]
         
         # raw_passages_{i}-{j}-of-{tot}.jsonl
-        deprioritized_domains = ["massiveds-rpj_arxiv", "massiveds-rpj_github", "massiveds-rpj_book", "lb_full"]
+        # ["massiveds-rpj_arxiv", "massiveds-rpj_github", "massiveds-rpj_book", "lb_full"]
         deprioritized_domains_index = {domain: i+1 for i, domain in enumerate(deprioritized_domains)}
         def sort_func(x):
             domain = x.split("/")[-1].split(f'raw_passages')[0].split('--')[0] 
@@ -113,7 +107,6 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
             key=sort_func)
 
         pos_id_map = {}
-        # print(f"DEBUG: Generating id2pos for {passage_dir}")
         total = 0
         for shard_id, filename in enumerate(tqdm(jsonl_files)):
             #match = re.match(r"raw_passages-(\d+)-of-\d+\.jsonl", filename)

@@ -18,7 +18,7 @@ import numpy as np
 import torch
 import transformers
 
-import src.index
+import index
 import src.contriever
 import src.utils
 import src.slurm

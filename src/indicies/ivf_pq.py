@@ -1,29 +1,13 @@
 import os
 import json
-import random
-import logging
 import pickle
 import time
-import glob
 from tqdm import tqdm
-import pdb
-from typing import List, Tuple, Any
-from abc import ABC, abstractmethod
-from omegaconf import ListConfig
-import subprocess
-import re
+from typing import List
 
 import faiss
 import numpy as np
 import torch
-from transformers import GPTNeoXTokenizerFast
-
-import contriever.src.contriever
-import contriever.src.utils
-import contriever.src.slurm
-from contriever.src.evaluation import calculate_matches
-import contriever.src.normalize_text
-
 from src.indicies.index_utils import convert_pkl_to_jsonl, get_passage_pos_ids
 
 
@@ -39,11 +23,13 @@ class IVFPQIndexer(object):
                 index_path,
                 meta_file,
                 trained_index_path,
+                deprioritized_domains=[],
                 passage_dir=None,
                 pos_map_save_path=None,
                 sample_train_size=1000000,
                 sample_train_path=None,
                 prev_index_path=None,
+                save_intermediate_index=False,
                 dimension=768,
                 dtype=np.float16,
                 ncentroids=4096,
@@ -58,8 +44,10 @@ class IVFPQIndexer(object):
         self.index_path = index_path  # path to store the final index
         self.meta_file = meta_file  # path to save the index id to db id map
         self.prev_index_path = prev_index_path  # add new data to it instead of training new clusters
+        self.save_intermediate_index = save_intermediate_index
         self.trained_index_path = trained_index_path  # path to save the trained index
         self.passage_dir = passage_dir
+        self.deprioritized_domains = deprioritized_domains
         self.pos_map_save_path = pos_map_save_path
         self.cuda = False
 
@@ -217,16 +205,17 @@ class IVFPQIndexer(object):
                 fout.write(f"Added {shard_id+1} / {len(self.embed_paths)} shards, ({(time.time()-start_time)/60} min)\n")
 
             # Save an index when changing domain
-            domain = embed_path.split("/")[-1].split('--')[0]
-            if prev_domain is None:
+            if self.save_intermediate_index:
+                domain = embed_path.split("/")[-1].split('--')[0]
+                if prev_domain is None:
+                    prev_domain = domain
+                if prev_domain != domain and "passages" not in domain:
+                    print(f"Finish adding {prev_domain}, about to add {domain}, saving index...")
+                    faiss.write_index(index, index_path.replace('.faiss', f'_{prev_domain}.faiss'))
+                    with open(self.meta_file.replace('.faiss.meta', f'_{prev_domain}.faiss.meta'), 'wb') as fout:
+                        pickle.dump(self.index_id_to_db_id, fout)
+                    print ('Adding took {} s'.format(time.time() - start_time))
                 prev_domain = domain
-            if prev_domain != domain and "passages" not in domain:
-                print(f"{prev_domain} is different from {domain}, saving index...")
-                faiss.write_index(index, index_path.replace('.faiss', f'_{prev_domain}.faiss'))
-                with open(self.meta_file.replace('.faiss.meta', f'_{prev_domain}.faiss.meta'), 'wb') as fout:
-                    pickle.dump(self.index_id_to_db_id, fout)
-                print ('Adding took {} s'.format(time.time() - start_time))
-            prev_domain = domain
         
         faiss.write_index(index, index_path)
         with open(self.meta_file, 'wb') as fout:
@@ -236,7 +225,7 @@ class IVFPQIndexer(object):
     
     def build_passage_pos_id_map(self, ):
         convert_pkl_to_jsonl(self.passage_dir)
-        passage_pos_ids = get_passage_pos_ids(self.passage_dir, self.pos_map_save_path)
+        passage_pos_ids = get_passage_pos_ids(self.passage_dir, self.pos_map_save_path, self.deprioritized_domains)
         return passage_pos_ids
 
     def load_psg_pos_id_map(self,):
@@ -279,21 +268,11 @@ class IVFPQIndexer(object):
         return domains, passages, db_ids
     
     def search(self, query_embs, k=4096):
-        # print("Moving index to GPU...")
-        # res = faiss.StandardGpuResources()
-        # co = faiss.GpuClonerOptions()
-        # co.useFloat16 = True
-        # gpu_index = faiss.index_cpu_to_gpu(res, 0, self.index, co)
-        # gpu_index.verbose = True
-        # print("Finished moving index to GPU...")
-        # DEBUG:
         indices_length = len(self.index_id_to_db_id)
         pos_length = 0
         for shard_id in self.psg_pos_id_map:
             for chunk_id in self.psg_pos_id_map[shard_id]:
                 pos_length += 1
-        print([indices_length, pos_length])
-        # assert False, [indices_length, pos_length]
         all_scores, all_indices = self.index.search(query_embs.astype(np.float32), k)
         all_domains, all_passages, db_ids = self.get_retrieved_passages(all_indices)
         return all_scores.tolist(), all_domains, all_passages, db_ids

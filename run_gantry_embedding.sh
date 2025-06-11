@@ -1,5 +1,5 @@
 
-CLUSTER="ai2/jupiter*"
+CLUSTER="ai2/jupiter-cirrascale-2"
 PRIORITY="high"
 
 export BEAKER_EXPERIMENT_NAME="Contriever-embedding"
@@ -17,7 +17,7 @@ gantry run \
     --priority "${PRIORITY}" \
     --leader-selection \
     --gpus 1 \
-    --replicas 8 \
+    --replicas 1 \
     --cluster "${CLUSTER}" \
     --budget ai2/oe-data \
     --env LOG_FILTER_TYPE=local_rank0_only \
@@ -26,10 +26,12 @@ gantry run \
     --env-secret AWS_ACCESS_KEY_ID=SEWONM_AWS_ACCESS_KEY_ID \
     --env-secret AWS_SECRET_ACCESS_KEY=SEWONM_AWS_SECRET_ACCESS_KEY \
     --env-secret WANDB_API_KEY=SEWONM_WANDB_API_KEY \
-    --install "pip install necessary platformdirs>=4.2.0 smart-open fsspec>=2023.6.0" \
+    --preemptible \
+    --install "pip install faiss-cpu==1.8.0 omegaconf hydra-core tqdm transformers sentence_transformers pyserini datasketch boto3 smart_open s3fs necessary platformdirs>=4.2.0 smart-open fsspec>=2023.6.0 && pip install --force-reinstall -U --no-deps -v gritlm && export BEAKER_REPLICA_RANK=3 && export BEAKER_REPLICA_COUNT=8" \
     --shared-memory 10GiB \
     --weka oe-data-default:/weka_data \
     --yes \
+    --retries 0 \
     -- python -m ric.main_ric --config-name $1 tasks.datastore.embedding=true
 
 
