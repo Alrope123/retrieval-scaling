@@ -59,9 +59,9 @@ To evaluate on the search results, refer to this repository: https://github.com/
 ## Custom search queries
 To search custom queries, the search queries are expected to be in a jsonl file with the following format:
 ```
-{"text": xxx...}
-{"text": xxx...}
-{"text": xxx...}
+{"query": xxx...}
+{"query": xxx...}
+{"query": xxx...}
 ```
 where each json object should contains a field `text` whose value is a query. Any other field will be perserved in the result file. 
 
