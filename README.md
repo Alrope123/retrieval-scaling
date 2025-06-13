@@ -153,7 +153,7 @@ python -m src.main_ric \
 - `datastore.embedding.embedding_dir`: path to the vector files.
 - `datastore.embedding.passages_dir`: path to directory that contains raw passage files.
 - `datastore.index.index_type`: index type. We use `IVFPQ` for our paper. Alternatively, setting it to `Flat` will build an index for exact search without approximation.
-- `datastore.index.ncentroids`: number of clusters. Theoretically it is positively correlated with build speed and negatively correlated with search speed. The recommand value is $4\sqrt{n vector}$ to $8\sqrt{n vector}$.
+- `datastore.index.ncentroids`: number of clusters. Theoretically it is positively correlated with build speed and negatively correlated with search speed. The recommand value is $4\sqrt{n vectors}$ to $8\sqrt{n vectors}$.
 - `datastore.index.n_subquantizers`: number of quantizer.  Theoretically it is positively correlated with precision and resulting index size (linearly).
 - `datastore.index.sample_train_size`: number of the sample size for training the index. The recommanded value is 1% - 10% of the total number of vectors.
 - `datastore.index.n_bits`: number of bits per subquantizer for compression.
