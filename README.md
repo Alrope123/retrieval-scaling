@@ -69,7 +69,7 @@ To build an datastore, the raw text from data sources are required to be chuncke
 ## To build vectors for a single data source in CompactDS
 Download the raw text data of a single data sources:
 ```bash
-python scripts/download.py --dataset_name alrope/compactds_raw_text --download_path raw_data --subfolder_path pes2o
+python scripts/download_raw_data.py --output_path raw_data --subfolder_path pes2o
 ```
 To build the vectors for a single data source:
 ```bash
@@ -83,7 +83,7 @@ python -m src.main_ric \
 ## To build vectors with full CompactDS
 Download the raw text data of all 10 data sources:
 ```bash
-python scripts/download.py --dataset_name alrope/compactds_raw_text --download_path raw_data
+python scripts/download.py --output_path raw_data
 ```
 
 Build the vectors for all 10 data sources:
