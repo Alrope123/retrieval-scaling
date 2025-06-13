@@ -70,14 +70,25 @@ python -m src.main_ric \
 
 
 ### Step 1: Vector Building
-To build an datastore, the raw text from data sources are required to be chuncked into passages and embeded into a vector space. **Skip this step if you would like to use our pre-built index instead.**
+To build an datastore, the raw text from data sources are required to be chuncked into passages and embeded into a vector space.
 
-#### To build vectors for a single data source (e.g., PeS2o)
-- Download the raw text data:
-```bash
-python scripts/download_raw_data.py --output_path raw_data --subfolder_path pes2o
+#### Prepare the raw data
+- The raw data files needs to be jsonl files (can be compressed) each with the following format:
 ```
-- To build the vectors:
+{"text": xxx..., "other_key": ...., ...}
+{"text": xxx..., "other_key": ...., ...}
+{"text": xxx..., "other_key": ...., ...}
+```
+- All these jsonl files needs to be put into a single directory (e.g., `raw_data/pes2o`).
+- Alternatively, to reproduce CompactDS, download the raw data:
+```bash
+python scripts/download_raw_data.py \
+    --output_path raw_data \
+    --subfolder_path pes2o  # Remove for downloading the full CompactDS
+```
+
+#### Build vectors 
+- To build vectors for a single data source (e.g., PeS2o):
 ```bash
 python -m src.main_ric \
     --config-name pes2o \
@@ -85,22 +96,12 @@ python -m src.main_ric \
     datastore.raw_data_path=raw_data/pes2o \
     datastore.embedding.output_dir=datastores/pes2o
 ```
-
-#### To build vectors with multiple data source (e.g., full CompactDS)
-- Download the raw text data of all 10 data sources:
-```bash
-python scripts/download_raw_data.py --output_path raw_data
-```
-
-- Build the vectors for all 10 data sources:
-```bash
-bash scripts/build_all_vectors.py raw_data
-```
+- For multiple data source, build the vectors for each of them separately. Run `bash scripts/build_all_vectors.py raw_data datastores` to build vectors for all 10 downloaded CompactDS data sources from `raw_data` and save the results in `datastores`. 
 
 #### Important Parameters for Customization
 - `model.datastore_encoder`, `model.datastore_tokenizer`, `query_encoder`, `query_tokenizer`: the models / tokenizers used for text embedding. These parameters should all be the same in most cases.
 - `datastore.domain`: the customized name of the datastore.
-- `datastore.raw_data_path`: the path to the directoy that contains the raw data. The path needs to contain jsonl files (can be compressed) where each data point contains a field `text`.
+- `datastore.raw_data_path`: the path to the directoy that contains the raw data.
 - `datastore.chunk_size`: the number of words to embed into a vector.
 - `datastore.embedding.datastore.no_fp16`: use compactds precision if set to True. 
 - `datastore.embedding.per_gpu_batch_size`: batch size for embedding.
@@ -110,7 +111,7 @@ bash scripts/build_all_vectors.py raw_data
 ### Step 2: Build the Index
 We use [Faiss](https://github.com/facebookresearch/faiss/tree/main) to build the index. To make it feasible to deploy the datastore of huge sizes with conventional RAM limit, we used IVFPQ (Inverted File Product Quantization) indices in our paper.
 
-#### To build the index for single-source datastore (e.g., PeS2o)
+#### To build the index for single-source vectors (e.g., PeS2o)
 - Run:
 ```bash
 python -m src.main_ric \
@@ -119,9 +120,9 @@ python -m src.main_ric \
     datastore.embedding.embedding_dir=datastores/pes2o \
     datastore.embedding.passages_dir=datastores/pes2o/passages
 ```
-#### To build the index for multiple-source datastore (e.g., full CompactDS) 
-- The vectors and passages need to be aggregated in to the same directories. 
-- In order to do that, we create symbolic link for vectors from all 10 data sources under `datastores` into `datastores/compactds`:
+#### To build the index from multiple-source vectors (e.g., full CompactDS) 
+- The vectors and passages need to be aggregated in to the same directories, which can be done by creating symbolic links for vectors from multiple data sources. 
+- To reproduce CompactDS, create symbolic links for vectors from all 10 data sources under `datastores` into `datastores/compactds`:
 ```bash
 bash create_symlink_vectors.sh datastores datastores/compactds
 bash create_symlink_passages.sh datastores datastores/compactds
@@ -151,9 +152,9 @@ python -m src.main_ric \
 ## Custom Queries Search
 To search with custom queries, with `tasks.eval.task_name=lm-eval` the search queries are expected to be in a jsonl file (e.g., `your_queries.jsonl`) with the following format:
 ```
-{"query": xxx...}
-{"query": xxx...}
-{"query": xxx...}
+{"query": xxx..., "other_key": ...., ...}
+{"query": xxx..., "other_key": ...., ...}
+{"query": xxx..., "other_key": ...., ...}
 ```
 where each json object should contains a field `text` whose value is a query. Any other field will be perserved in the result file. 
 
