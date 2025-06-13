@@ -24,7 +24,7 @@ huggingface-cli login --token <your_hf_token> # ignore if use custom data
 ## Quick Start
 - Download the pre-built vectors and raw passages for PeS2o, and search queries for MMLU.
 ```bash
-aws s3 sync s3://ai2-llm/pretraining-data/sources/ds-olmo-data/indices/pes2o datastore/pes2o # vectors and passage
+aws s3 sync s3://ai2-llm/pretraining-data/sources/ds-olmo-data/indices/pes2o datastores/pes2o # vectors and passage
 aws s3 cp s3://ai2-llm/pretraining-data/sources/ds-olmo-data/queries/mmlu:mc::retrieval_q.jsonl queries # search queries
 ```
 
@@ -33,8 +33,8 @@ aws s3 cp s3://ai2-llm/pretraining-data/sources/ds-olmo-data/queries/mmlu:mc::re
 python -m src.main_ric \
     --config-name pes2o_deduped_dense_retrieval.yaml \
     tasks.datastore.index=true \
-    datastore.embedding.passages_dir=datastore/pes2o/passages \
-    datastore.index.passages_embeddings=datastore/pes2o/embeddings/facebook/contriever-msmarco/pes2o/*.pkl
+    datastore.embedding.passages_dir=datastores/pes2o/passages \
+    datastore.index.passages_embeddings=datastores/pes2o/embeddings/facebook/contriever-msmarco/pes2o/*.pkl
 ```
 
 - To search with the queries for MMLU with the built index:
@@ -77,7 +77,7 @@ python -m src.main_ric \
     --config-name pes2o \
     tasks.datastore.embedding=true \
     datastore.raw_data_path=raw_data/pes2o \
-    datastore.embedding.output_dir=datastore/pes2o
+    datastore.embedding.output_dir=datastores/pes2o
 ```
 
 ## To build vectors with full CompactDS
@@ -118,7 +118,7 @@ s3://ai2-llm/pretraining-data/sources/ds-olmo-data/indices/
 ```
 Alternatively, obtain the files for a single-source datastore (e.g., PeS2o) by downloading the corresponding subdirectory only:
 ```bash
-aws s3 sync s3://ai2-llm/pretraining-data/sources/ds-olmo-data/indices/pes2o datastore/pes2o
+aws s3 sync s3://ai2-llm/pretraining-data/sources/ds-olmo-data/indices/pes2o datastores/pes2o
 ```
 
 ## Step 2: Index Preparation
@@ -130,14 +130,14 @@ To build the index for a single-source datastore (e.g. PeS2o):
 python -m src.main_ric \
     --config-name pes2o \
     tasks.datastore.index=true \
-    datastore.embedding.embedding_dir=datastore/pes2o \
-    datastore.embedding.passages_dir=datastore/pes2o/passages
+    datastore.embedding.embedding_dir=datastores/pes2o \
+    datastore.embedding.passages_dir=datastores/pes2o/passages
 ```
 ### To build the index for full CompactDS
-The vectors and passages need to be aggregated in to the same directories. In order to do that, we create symbolic link for vectors from all data sources under `datastore` into `datastore/compactds`:
+The vectors and passages need to be aggregated in to the same directories. In order to do that, we create symbolic link for vectors from all data sources under `datastores` into `datastores/compactds`:
 ```bash
-bash create_symlink_vectors.sh datastore datastore/compactds
-bash create_symlink_passages.sh datastore datastore/compactds
+bash create_symlink_vectors.sh datastores datastores/compactds
+bash create_symlink_passages.sh datastores datastores/compactds
 ```
 
 Now, run:
@@ -145,8 +145,8 @@ Now, run:
 python -m src.main_ric \
     --config-name CompactDS \
     tasks.datastore.index=true \
-    datastore.embedding.embedding_dir=datastore/compactds \
-    datastore.embedding.passages_dir=datastore/compactds/passages
+    datastore.embedding.embedding_dir=datastores/compactds \
+    datastore.embedding.passages_dir=datastores/compactds/passages
 ```
 
 #### Important Parameters for Customization
@@ -167,15 +167,15 @@ aws s3 sync s3://ai2-llm/pretraining-data/sources/ds-olmo-data/indices/built_ind
 ```
 You still need to aggregate the raw passages under one single directory via symbolic link to build the map between index positions to passages. To aggregate the raw passages, run:
 ```bash
-bash create_symlink_passages.sh datastore datastore/compactds
+bash create_symlink_passages.sh datastores datastores/compactds
 ```
 Then build the position to passages map:
 ```bash
 python -m src.main_ric \
     --config-name  \
     tasks.datastore.index=true \
-    datastore.embedding.embedding_dir=datastore/compactds \
-    datastore.embedding.passages_dir=datastore/compactds/passages
+    datastore.embedding.embedding_dir=datastores/compactds \
+    datastore.embedding.passages_dir=datastores/compactds/passages
 ```
 
 ## Step 3: Search on the index with queries
