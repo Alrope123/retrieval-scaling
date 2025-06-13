@@ -7,3 +7,4 @@ outputs/
 lm_eval.egg-info/
 *.jsonl
 *.txt
+internal/
