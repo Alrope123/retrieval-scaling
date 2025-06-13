@@ -1,9 +1,11 @@
 import argparse
+import os
 from huggingface_hub import HfApi
 
 
 def main(args):
     api = HfApi()
+    os.makedirs(args.output_path, exist_ok=True)
     if args.subfolder_path is None:
         api.dataset_download(
             repo_id=args.dataset_name,
