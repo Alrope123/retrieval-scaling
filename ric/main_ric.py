@@ -8,6 +8,7 @@ from src.embed import generate_passage_embeddings
 from src._index import build_index, add_to_index
 #from src.index import build_index
 from src._search import search_topk, post_hoc_merge_topk_multi_domain
+from src.exact_rerank import exact_rerank_topk
 from src.evaluate_perplexity import evaluate_perplexity
 
 
@@ -32,6 +33,10 @@ def main(cfg) -> None:
     if cfg.tasks.eval.get('search', False):
         logging.info("\n\n************** Running Search ***********")
         search_topk(cfg)
+
+    if cfg.tasks.eval.get('exact_rerank', False):
+        logging.info("\n\n************** Running Search ***********")
+        exact_rerank_topk(cfg)
     
     if cfg.tasks.eval.get('merge_search', False):
         logging.info("\n\n************** Post Merging Searched Results from Multiple Domains ***********")

@@ -71,8 +71,9 @@ class IVFPQIndexer(object):
         self.num_keys_to_add_at_a_time = num_keys_to_add_at_a_time
         self.n_subquantizers = n_subquantizers
         self.code_size = code_size
+        self.random_seed = 1234
 
-        np.random.seed(2025)
+        np.random.seed(self.random_seed)
 
         if os.path.exists(index_path) and os.path.exists(self.meta_file):
             print("Loading index...")
@@ -171,10 +172,10 @@ class IVFPQIndexer(object):
                                        faiss.METRIC_INNER_PRODUCT
                                        )
         start_index.nprobe = self.probe
-        np.random.seed(1)
+        np.random.seed(self.random_seed)
 
-        start_index.cp.seed = 2025
-        start_index.pq.cp.seed = 2025 
+        start_index.cp.seed = self.random_seed
+        start_index.pq.cp.seed = self.random_seed 
 
         if self.cuda:
             # Convert to GPU index
