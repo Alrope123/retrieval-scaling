@@ -21,16 +21,16 @@ model:
 
 
 datastore:
-  domain: s2orc
-  raw_data_path: /weka_data/xinxil/private-retrieval-lm/deduped_dataset/s2orc
+  domain: github
+  raw_data_path: /weka_data/xinxil/private-retrieval-lm/deduped_dataset/github
   chunk_size: 256  # chunk size in number of words
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v2.3_individual_datastore/pes2o
+    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1/github
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
-    passages_dir: ${datastore.embedding.output_dir}/passages/
+    passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}
     max_files_per_shard: 1
 
     per_gpu_batch_size: 512
@@ -46,7 +46,7 @@ datastore:
 
 
     prefix: "passages"
-    embedding_dir: ${datastore.embedding.output_dir}/embeddings/
+    embedding_dir: ${datastore.embedding.output_dir}/embeddings/${model.datastore_encoder}/${datastore.domain}
     use_saved_if_exists: false
 
   index:
@@ -58,12 +58,12 @@ datastore:
     save_or_load_index: True
     no_fp16: False
     index_type: IVFPQ
-    sample_train_size: 9900000
+    sample_train_size: 100000
     indexing_batch_size: 1000000
     projection_size: 768
     probe: 256 #64 #8
-    ncentroids: 16384 # 4096 in silo 
-    n_subquantizers: 64 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
+    ncentroids: 2048 # 4096 in silo 
+    n_subquantizers: 256 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
     n_bits: 8    # Number of bits per subquantizer, introducing compression rate of embedding_precision / n_bits
     overwrite: false
 

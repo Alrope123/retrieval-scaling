@@ -21,13 +21,13 @@ model:
 
 
 datastore:
-  domain: massiveds-math-no-gsm8k
-  raw_data_path: /weka_data/xinxil/private-retrieval-lm/deduped_dataset/massiveds-math-no-gsm8k
+  domain: pes2o
+  raw_data_path: /weka_data/xinxil/private-retrieval-lm/deduped_dataset/pes2o
   chunk_size: 256  # chunk size in number of words
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1/massiveds-math-no-gsm8k
+    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1/pes2o
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}

@@ -17,17 +17,17 @@ model:
   query_tokenizer: facebook/contriever-msmarco
   query_encoder: facebook/contriever-msmarco
   datastore_encoder: facebook/contriever-msmarco
-  lm_model: meta-llama/Llama-3.1-8B    # LM for evaluation
+  lm_model: meta-llama/Llama-3.1-8B-Instruct    # LM for evaluation
 
 
 datastore:
-  domain: 0
-  raw_data_path: /weka_data/xinxil/private-retrieval-lm/deduped_dataset/lb_full
+  domain: math
+  raw_data_path: /weka_data/xinxil/private-retrieval-lm/deduped_dataset/math
   chunk_size: 256  # chunk size in number of words
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1/lb_full
+    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1/math
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}
@@ -48,6 +48,7 @@ datastore:
     prefix: "passages"
     embedding_dir: ${datastore.embedding.output_dir}/embeddings/${model.datastore_encoder}/${datastore.domain}
     use_saved_if_exists: false
+
   index:
     raw_data_path: ${datastore.raw_data_path}
     chunk_size: ${datastore.chunk_size}
@@ -65,6 +66,7 @@ datastore:
     n_subquantizers: 256 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
     n_bits: 8    # Number of bits per subquantizer, introducing compression rate of embedding_precision / n_bits
     overwrite: false
+
 
 evaluation:
   domain: mmlu
@@ -96,7 +98,7 @@ evaluation:
   max_retrieval_len: 1024
   calibration_out_dir: null
   eval_output_dir: ${datastore.embedding.output_dir}/retrieved_results/${model.datastore_encoder}/${datastore.domain}_datastore-${datastore.chunk_size}_chunk_size/top_${evaluation.search.n_docs}
-  results_only_log_file: scaling_out/test_c4_ppl.log
+  results_only_log_file: scaling_out/test_massiveds_ppl.log
   debug_mode: false
   decontamination: false
   contamination_threshold: 32

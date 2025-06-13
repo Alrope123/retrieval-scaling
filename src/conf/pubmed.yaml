@@ -21,13 +21,13 @@ model:
 
 
 datastore:
-  domain: massiveds-rpj_stackexchange
-  raw_data_path: /weka_data/xinxil/private-retrieval-lm/deduped_dataset/rpj_stackexchange
+  domain: pubmed
+  raw_data_path: /weka_data/xinxil/private-retrieval-lm/deduped_dataset/pubmed
   chunk_size: 256  # chunk size in number of words
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1/rpj_stackexchange
+    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1/pubmed
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}
