@@ -41,7 +41,7 @@ python -m src.main_ric \
 ```bash
 python scripts/download_queries.py --output_path queries
 ```
-- Now, to obtain the top 1000 documents for each MMLU Pro query from CompactDS:
+- To obtain the top 1000 documents for each MMLU Pro query from CompactDS:
 ```bash
 python -m src.main_ric \
     --config-name CompactDS \
@@ -51,7 +51,7 @@ python -m src.main_ric \
     evaluation.search.n_docs=1000
 ```
 
-## Custom Index and Search 
+## Custom Index Building
 ### Step 0: Configuration and Command Format
 - We define all the parameters in `ric/conf/*.yaml` files. At the runtime, you will specify the name of the config file with `--config-name`. 
 
@@ -127,7 +127,7 @@ bash create_symlink_vectors.sh datastores datastores/compactds
 bash create_symlink_passages.sh datastores datastores/compactds
 ```
 
-- Now, run:
+- Now, to perform the index building:
 ```bash
 python -m src.main_ric \
     --config-name CompactDS \
@@ -148,17 +148,18 @@ python -m src.main_ric \
 - `datastore.index.deprioritized_domains`: list of domains that will be added last during index building.
 
 
-### Step 3: Search with Queries
-- To search with custom queries, with `tasks.eval.task_name=lm-eval` the search queries are expected to be in a jsonl file (e.g., `your_queries.jsonl`) with the following format:
+## Custom Queries Search
+To search with custom queries, with `tasks.eval.task_name=lm-eval` the search queries are expected to be in a jsonl file (e.g., `your_queries.jsonl`) with the following format:
 ```
 {"query": xxx...}
 {"query": xxx...}
 {"query": xxx...}
-```where each json object should contains a field `text` whose value is a query. Any other field will be perserved in the result file. 
+```
+where each json object should contains a field `text` whose value is a query. Any other field will be perserved in the result file. 
 
 - Alternatively, change `tasks.eval.task_name` to support different file format. See details in `load_eval_data()` in [src/data.py](src/data.py).
 
-- Now, run:
+To perform the search, run:
 ```bash
 python -m src.main_ric \
     --config-name CompactDS \
