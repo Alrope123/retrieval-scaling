@@ -25,7 +25,7 @@ huggingface-cli login --token <your_hf_token> # ignore if use custom data
 ### Set up CompactDS
 - Download the index we built for CompactDS:
 ```bash
-python scripts/download_index.py --output_path datastores/compactds
+bash scripts/download_compactds.sh --output_path datastores/compactds
 ```
 - Build the index positions to passages map for your local file system:
 ```bash
