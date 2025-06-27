@@ -75,6 +75,7 @@ class IVFPQIndexer(object):
 
         np.random.seed(self.random_seed)
 
+        print("Trying to load index from:", index_path)
         if os.path.exists(index_path) and os.path.exists(self.meta_file):
             print("Loading index...")
             self.index = faiss.read_index(index_path)
