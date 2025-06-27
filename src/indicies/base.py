@@ -29,7 +29,8 @@ class Indexer(object):
             formatted_index_name = f"index_{self.index_type}.faiss"
         index_path = os.path.join(index_dir, formatted_index_name)
         meta_file = os.path.join(index_dir, formatted_index_name+'.meta')
-        pos_map_save_path = os.path.join(index_dir, 'passage_pos_id_map.pkl')
+        # pos_map_save_path = os.path.join(index_dir, 'passage_pos_id_map.pkl')
+        pos_map_save_path = None
         sample_train_path = self.args.sample_train_path if "sample_train_path" in self.args else None
         
         if self.index_type == "Flat":

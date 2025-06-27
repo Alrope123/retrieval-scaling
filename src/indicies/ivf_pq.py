@@ -327,6 +327,8 @@ class IVFPQIndexer(object):
         with open(self.meta_file, 'wb') as fout:
             pickle.dump(self.index_id_to_db_id, fout)
 
+        print("Size of index after adding new embeddings:", self.index.ntotal)
+
         # Update passage position map
         if new_passage_dir is not None:
             print(f"Updating passage position map from: {new_passage_dir}")
