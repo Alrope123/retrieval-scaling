@@ -31,8 +31,7 @@ datastore:
     output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v4_1
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
-    passages_dir: /weka_data/xinxil/private-retrieval-lm/ours_v4_1/passages/
-    new_passages_dir: null
+    passages_dir: /weka_data/xinxil/private-retrieval-lm/upload/passages
     max_files_per_shard: 1
 
     per_gpu_batch_size: 512
@@ -55,7 +54,6 @@ datastore:
     raw_data_path: ${datastore.raw_data_path}
     chunk_size: ${datastore.chunk_size}
     passages_embeddings: ${datastore.embedding.embedding_dir}/*.pkl
-    new_passages_embeddings: /weka_data/xinxil/private-retrieval-lm/ours_v4_1/embeddings/*.pkl
     num_subsampled_embedding_files: -1    # Number of subsampled embeddings, use all if pass -1, not supported yet, assume use all embeddings in the dir
     index_shard_ids: null
     save_or_load_index: True
