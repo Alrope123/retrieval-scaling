@@ -32,6 +32,7 @@ datastore:
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     passages_dir: /weka_data/xinxil/private-retrieval-lm/ours_v4_1/passages/
+    new_passages_dir: null
     max_files_per_shard: 1
 
     per_gpu_batch_size: 512
