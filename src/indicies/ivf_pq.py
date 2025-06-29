@@ -81,7 +81,7 @@ class IVFPQIndexer(object):
             self.index = faiss.read_index(index_path)
             self.index_id_to_db_id = self.load_index_id_to_db_id()
             self.index.nprobe = self.probe
-        
+            print("DEBUG: index_id_to_db_id length:", len(self.index_id_to_db_id))
         else:
             self.index_id_to_db_id = []
             if not os.path.exists(self.trained_index_path):
