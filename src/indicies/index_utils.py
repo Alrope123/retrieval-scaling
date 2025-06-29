@@ -113,7 +113,8 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path):
             key=sort_func)
 
         pos_id_map = {}
-        # print(f"DEBUG: Generating id2pos for {passage_dir}")
+        print(f"DEBUG: Generating id2pos for {passage_dir}")
+        print(f"Sorted JSONL files: {jsonl_files}")
         total = 0
         for shard_id, filename in enumerate(tqdm(jsonl_files)):
             #match = re.match(r"raw_passages-(\d+)-of-\d+\.jsonl", filename)
