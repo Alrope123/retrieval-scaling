@@ -4,7 +4,7 @@ import json
 from tqdm import tqdm
 import re
 import glob
-
+import numpy as np
 
 def get_index_dir_and_embedding_paths(cfg, index_shard_ids=None, deprioritized_domains=[]):
     embedding_args = cfg.datastore.embedding
@@ -85,13 +85,12 @@ def convert_pkl_to_jsonl(passage_dir):
                 f.write('\n')
     print("All pickle files have been converted to JSONL files.")
 
-def get_passage_pos_ids(passage_dir, pos_map_save_path, deprioritized_domains=[]):
+def get_passage_pos_ids(passage_dir, pos_array_save_path, filenames_save_path, deprioritized_domains=[]):
     if os.path.isdir(passage_dir):
+        print(f"Generating id2pos for {passage_dir}")
         filenames = os.listdir(passage_dir)
         jsonl_files = [filename for filename in filenames if '.jsonl' in filename]
         
-        # raw_passages_{i}-{j}-of-{tot}.jsonl
-        # ["massiveds-rpj_arxiv", "massiveds-rpj_github", "massiveds-rpj_book", "lb_full"]
         deprioritized_domains_index = {domain: i+1 for i, domain in enumerate(deprioritized_domains)}
         def sort_func(x):
             domain = x.split("/")[-1].split(f'raw_passages')[0].split('--')[0] 
@@ -105,63 +104,63 @@ def get_passage_pos_ids(passage_dir, pos_map_save_path, deprioritized_domains=[]
         jsonl_files = sorted(
             jsonl_files,
             key=sort_func)
+        print("DEBUG: Sorted JSONL files:")
+        print("\n".join(jsonl_files))
 
-        pos_id_map = {}
+        pos_id_array = []
+        file_names = []
         total = 0
         for shard_id, filename in enumerate(tqdm(jsonl_files)):
-            #match = re.match(r"raw_passages-(\d+)-of-\d+\.jsonl", filename)
-            #shard_id = int(match.group(1))
+            file_names.append(filename)
             file_path = os.path.join(passage_dir, filename)
             
-            file_pos_id_map = {}
             with open(file_path, 'r') as file:
                 position = file.tell()
                 line = file.readline()
                 doc_id = 0
                 while line:
-                    file_pos_id_map[doc_id] = [file_path, position]
+                    pos_id_array.append(position)
                     doc_id += 1
                     position = file.tell()
                     line = file.readline()
             total += doc_id - 1
-            # print(f"DEBUG: Building id2pos for {filename}: added {doc_id-1}, result in {total}")
-            pos_id_map[shard_id] = file_pos_id_map
-    
+
     elif os.path.isfile(passage_dir):
         # NOTE: deprecated feature, will be removed in future release.
         assert '.pkl' in passage_dir and os.path.exists(passage_dir.replace('.pkl', '.jsonl'))
-        match = re.search(r"-(\d+)-of-\d+\.pkl", passage_dir)
-        assert match, f"Cannot extract shard_id from {passage_dir}"
-        shard_id = int(match.group(1))
-        
-        pos_id_map = {}
         file_path = passage_dir.replace('.pkl', '.jsonl')
         print(f"Generating id2pos for {file_path}")
+
+        pos_id_array = []
+        file_names = []
         
-        file_pos_id_map = {}
+        file_names.append(file_path)
         with open(file_path, 'r') as file:
             position = file.tell()
             line = file.readline()
             doc_id = 0
             while line:
-                file_pos_id_map[doc_id] = [file_path, position]
+                pos_id_array.append(position)
                 doc_id += 1
                 position = file.tell()
                 line = file.readline()
-        pos_id_map[shard_id] = file_pos_id_map
-    
     else:
         print(f"{passage_dir} does not exist or is neither a file nor a directory.")
         raise AssertionError
     
-    
-    # Save the output map to a pickle file
-    if pos_map_save_path is not None:
-        with open(pos_map_save_path, 'wb') as f:
-            pickle.dump(pos_id_map, f)
-        print(f"Output map saved to {pos_map_save_path}")
-    return pos_id_map
-    
+    # Save the output array to a pickle file
+    if pos_array_save_path is not None:
+        with open(pos_array_save_path, 'wb') as f:
+            np.save(f, np.array(pos_id_array, dtype=np.int64))
+        print(f"Output array saved to {pos_array_save_path}")
+
+    # Save the output filenames to a pickle file
+    if filenames_save_path is not None:
+        with open(filenames_save_path, 'wb') as f:
+            np.save(f, np.array(file_names, dtype=object))
+        print(f"Output filenames saved to {filenames_save_path}")
+
+    return pos_id_array, file_names
 
 
 if __name__ == '__main__':
