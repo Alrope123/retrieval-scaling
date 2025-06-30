@@ -73,9 +73,9 @@ class IVFPQIndexer(object):
         
         else:
             self.index_id_to_file_id = []
-            if not os.path.exists(self.trained_index_path):
-                print ("Training index...")
-                self._sample_and_train_index()
+            # if not os.path.exists(self.trained_index_path):
+            #     print ("Training index...")
+            #     self._sample_and_train_index()
 
             print ("Building index...")
             self.index = self._add_keys(self.index_path, self.prev_index_path if self.prev_index_path is not None else self.trained_index_path)
@@ -83,8 +83,11 @@ class IVFPQIndexer(object):
         if self.pos_array_save_path is not None:
             self.psg_pos_id_array, self.passage_filenames = self.load_psg_pos_id_array()
 
-        print ("index:", self.index)
-        print (self.index.ntotal)
+        # print ("index:", self.index)
+        # print (self.index.ntotal)
+        print(f"DEBUG: length of index_id_to_file_id: {len(self.index_id_to_file_id)}")
+        print(f"DEBUG: length of psg_pos_id_array: {len(self.psg_pos_id_array) if hasattr(self, 'psg_pos_id_array') else 'N/A'}")
+        print(f"DEBUG: length of passage_filenames: {len(self.passage_filenames) if hasattr(self, 'passage_filenames') else 'N/A'}")
     
     def load_index_id_to_file_id(self,):
         with open(self.meta_file, "rb") as reader:
@@ -184,8 +187,8 @@ class IVFPQIndexer(object):
         faiss.write_index(start_index, trained_index_path)
 
     def _add_keys(self, index_path, trained_index_path):
-        index = faiss.read_index(trained_index_path)
-        assert index.is_trained and index.ntotal == 0
+        # index = faiss.read_index(trained_index_path)
+        # assert index.is_trained and index.ntotal == 0
         
         start_time = time.time()
         prev_domain = None
@@ -197,33 +200,34 @@ class IVFPQIndexer(object):
             shard_id = int(match.group(1))
             to_add = self.get_embs(shard_id=shard_id).copy()
             '''
-            # Save an index when changing domain
-            if self.save_intermediate_index:
-                domain = embed_path.split("/")[-1].split('--')[0]
-                if prev_domain is None:
-                    prev_domain = domain
-                if prev_domain != domain and "passages" not in domain:
-                    print(f"Finish adding {prev_domain}, about to add {domain}, saving index...")
-                    faiss.write_index(index, index_path.replace('.faiss', f'_{prev_domain}.faiss'))
-                    with open(self.meta_file.replace('.faiss.meta', f'_{prev_domain}.faiss.meta'), 'wb') as fout:
-                        np.save(fout, np.array(self.index_id_to_file_id))
-                    print ('Adding took {} s'.format(time.time() - start_time))
-                prev_domain = domain
+            # # Save an index when changing domain
+            # if self.save_intermediate_index:
+            #     domain = embed_path.split("/")[-1].split('--')[0]
+            #     if prev_domain is None:
+            #         prev_domain = domain
+            #     if prev_domain != domain and "passages" not in domain:
+            #         print(f"Finish adding {prev_domain}, about to add {domain}, saving index...")
+            #         faiss.write_index(index, index_path.replace('.faiss', f'_{prev_domain}.faiss'))
+            #         with open(self.meta_file.replace('.faiss.meta', f'_{prev_domain}.faiss.meta'), 'wb') as fout:
+            #             np.save(fout, np.array(self.index_id_to_file_id))
+            #         print ('Adding took {} s'.format(time.time() - start_time))
+            #     prev_domain = domain
 
             with open(embed_path, "rb") as fin:
                 _, to_add = pickle.load(fin)
-            index.add(to_add)
+            # index.add(to_add)
             file_ids_to_add = [shard_id] * len(to_add)
             self.index_id_to_file_id.extend(file_ids_to_add)
             print ('Added %d / %d shards, (%d min)' % (shard_id+1, len(self.embed_paths), (time.time()-start_time)/60))
             with open(self.meta_file.replace('.faiss.meta', f'_.log'), 'w') as fout:
                 fout.write(f"Added {shard_id+1} / {len(self.embed_paths)} shards, ({(time.time()-start_time)/60} min)\n")
         
-        faiss.write_index(index, index_path)
+        # faiss.write_index(index, index_path)
         with open(self.meta_file, 'wb') as fout:
             np.save(fout, np.array(self.index_id_to_file_id))
         print ('Adding took {} s'.format(time.time() - start_time))
-        return index
+        # return index
+        return None
     
     def build_passage_pos_id_array(self, ):
         convert_pkl_to_jsonl(self.passage_dir)
