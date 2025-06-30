@@ -240,7 +240,7 @@ class IVFPQIndexer(object):
             with open(self.pos_array_save_path, 'rb') as f:
                 psg_pos_id_array = np.load(f)
             with open(self.passage_filenames_save_path, 'rb') as f:
-                passage_filenames = np.load(f)
+                passage_filenames = np.load(f, allow_pickle=True)
         else:
             psg_pos_id_array, passage_filenames = self.build_passage_pos_id_array()
         return psg_pos_id_array, passage_filenames
