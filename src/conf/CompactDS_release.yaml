@@ -67,7 +67,7 @@ datastore:
     n_subquantizers: 64 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
     n_bits: 8    # Number of bits per subquantizer, introducing compression rate of embedding_precision / n_bits
     overwrite: false
-
+    deprioritized_domains: ["massiveds-rpj_arxiv", "massiveds-rpj_github", "massiveds-rpj_book", "lb_full"]
 
 evaluation:
   domain: mmlu
