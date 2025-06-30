@@ -80,14 +80,14 @@ class IVFPQIndexer(object):
             print ("Building index...")
             self.index = self._add_keys(self.index_path, self.prev_index_path if self.prev_index_path is not None else self.trained_index_path)
         
-        if self.pos_array_save_path is not None:
-            self.psg_pos_id_array, self.passage_filenames = self.load_psg_pos_id_array()
+        # if self.pos_array_save_path is not None:
+        #     self.psg_pos_id_array, self.passage_filenames = self.load_psg_pos_id_array()
 
         # print ("index:", self.index)
         # print (self.index.ntotal)
         print(f"DEBUG: length of index_id_to_file_id: {len(self.index_id_to_file_id)}")
-        print(f"DEBUG: length of psg_pos_id_array: {len(self.psg_pos_id_array) if hasattr(self, 'psg_pos_id_array') else 'N/A'}")
-        print(f"DEBUG: length of passage_filenames: {len(self.passage_filenames) if hasattr(self, 'passage_filenames') else 'N/A'}")
+        # print(f"DEBUG: length of psg_pos_id_array: {len(self.psg_pos_id_array) if hasattr(self, 'psg_pos_id_array') else 'N/A'}")
+        # print(f"DEBUG: length of passage_filenames: {len(self.passage_filenames) if hasattr(self, 'passage_filenames') else 'N/A'}")
     
     def load_index_id_to_file_id(self,):
         with open(self.meta_file, "rb") as reader:
