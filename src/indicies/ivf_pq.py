@@ -215,19 +215,18 @@ class IVFPQIndexer(object):
 
             with open(embed_path, "rb") as fin:
                 _, to_add = pickle.load(fin)
-            # index.add(to_add)
+            index.add(to_add)
             file_ids_to_add = [shard_id] * len(to_add)
             self.index_id_to_file_id.extend(file_ids_to_add)
             print ('Added %d / %d shards, (%d min)' % (shard_id+1, len(self.embed_paths), (time.time()-start_time)/60))
             with open(self.meta_file.replace('.faiss.meta', f'_.log'), 'w') as fout:
                 fout.write(f"Added {shard_id+1} / {len(self.embed_paths)} shards, ({(time.time()-start_time)/60} min)\n")
         
-        # faiss.write_index(index, index_path)
+        faiss.write_index(index, index_path)
         with open(self.meta_file, 'wb') as fout:
             np.save(fout, np.array(self.index_id_to_file_id))
         print ('Adding took {} s'.format(time.time() - start_time))
-        # return index
-        return None
+        return index
     
     def build_passage_pos_id_array(self, ):
         convert_pkl_to_jsonl(self.passage_dir)
