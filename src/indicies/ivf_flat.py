@@ -24,7 +24,9 @@ class IVFFlatIndexer(object):
                 meta_file,
                 trained_index_path,
                 passage_dir=None,
-                pos_map_save_path=None,
+                deprioritized_domains=[],
+                pos_array_save_path=None,
+                passage_filenames_save_path=None,
                 sample_train_size=1000000,
                 prev_index_path=None,
                 dimension=768,
@@ -41,7 +43,9 @@ class IVFFlatIndexer(object):
         self.prev_index_path = prev_index_path  # add new data to it instead of training new clusters
         self.trained_index_path = trained_index_path  # path to save the trained index
         self.passage_dir = passage_dir
-        self.pos_map_save_path = pos_map_save_path
+        self.deprioritized_domains = deprioritized_domains
+        self.pos_array_save_path = pos_array_save_path
+        self.passage_filenames_save_path = passage_filenames_save_path
         self.cuda = False
 
         self.sample_size = sample_train_size
@@ -53,11 +57,11 @@ class IVFFlatIndexer(object):
         if os.path.exists(index_path) and os.path.exists(self.meta_file):
             print("Loading index...")
             self.index = faiss.read_index(index_path)
-            self.index_id_to_db_id = self.load_index_id_to_db_id()
+            self.index_id_to_file_id = self.load_index_id_to_file_id()
             self.index.nprobe = self.probe
             # assert self.index.nprobe==self.index.nlist, f"nlist and nprobe are different {self.index.nprobe},{self.index.nlist}"
         else:
-            self.index_id_to_db_id = []
+            self.index_id_to_file_id = []
             if not os.path.exists(self.trained_index_path):
                 print ("Training index...")
                 self._sample_and_train_index()
@@ -65,13 +69,13 @@ class IVFFlatIndexer(object):
             print ("Building index...")
             self.index = self._add_keys(self.index_path, self.prev_index_path if self.prev_index_path is not None else self.trained_index_path)
         
-        if self.pos_map_save_path is not None:
-            self.psg_pos_id_map = self.load_psg_pos_id_map()
+        if self.pos_array_save_path is not None:
+            self.psg_pos_id_array, self.passage_filenames = self.load_psg_pos_id_array()
 
-    def load_index_id_to_db_id(self,):
+    def load_index_id_to_file_id(self,):
         with open(self.meta_file, "rb") as reader:
-            index_id_to_db_id = pickle.load(reader)
-        return index_id_to_db_id
+            index_id_to_file_id = pickle.load(reader)
+        return index_id_to_file_id
     
     def load_embeds(self, shard_id=None):
         all_ids, all_embeds = [], []
@@ -154,53 +158,69 @@ class IVFFlatIndexer(object):
         assert index.is_trained and index.ntotal == 0
         
         start_time = time.time()
+        prev_domain = None
+        # NOTE: the shard id is a absolute id defined in the name
         for shard_id, embed_path in enumerate(self.embed_paths):
-            #filename = os.path.basename(embed_path)
-            #match = re.search(r"passages_(\d+)\.pkl", filename)
-            #shard_id = int(match.group(1))
-            
+            '''
+            filename = os.path.basename(embed_path)
+            match = re.search(r"passages(\d+)\.pkl", filename)
+            shard_id = int(match.group(1))
+            to_add = self.get_embs(shard_id=shard_id).copy()
+            '''
+            # Save an index when changing domain
+            if self.save_intermediate_index:
+                domain = embed_path.split("/")[-1].split('--')[0]
+                if prev_domain is None:
+                    prev_domain = domain
+                if prev_domain != domain and "passages" not in domain:
+                    print(f"Finish adding {prev_domain}, about to add {domain}, saving index...")
+                    faiss.write_index(index, index_path.replace('.faiss', f'_{prev_domain}.faiss'))
+                    with open(self.meta_file.replace('.faiss.meta', f'_{prev_domain}.faiss.meta'), 'wb') as fout:
+                        np.save(fout, np.array(self.index_id_to_file_id))
+                    print ('Adding took {} s'.format(time.time() - start_time))
+                prev_domain = domain
+
             with open(embed_path, "rb") as fin:
                 _, to_add = pickle.load(fin)
-    
-            # to_add = self.get_embs(shard_id=shard_id).copy()
             index.add(to_add)
-            ids_toadd = [[shard_id, chunk_id] for chunk_id in range(len(to_add))]  #TODO: check len(to_add) is correct usage
-            self.index_id_to_db_id.extend(ids_toadd)
+            file_ids_to_add = [shard_id] * len(to_add)
+            self.index_id_to_file_id.extend(file_ids_to_add)
             print ('Added %d / %d shards, (%d min)' % (shard_id+1, len(self.embed_paths), (time.time()-start_time)/60))
+            with open(self.meta_file.replace('.faiss.meta', f'_.log'), 'w') as fout:
+                fout.write(f"Added {shard_id+1} / {len(self.embed_paths)} shards, ({(time.time()-start_time)/60} min)\n")
         
         faiss.write_index(index, index_path)
         with open(self.meta_file, 'wb') as fout:
-            pickle.dump(self.index_id_to_db_id, fout)
+            np.save(fout, np.array(self.index_id_to_file_id))
         print ('Adding took {} s'.format(time.time() - start_time))
         return index
     
-    def build_passage_pos_id_map(self, ):
+    def build_passage_pos_id_array(self, ):
         convert_pkl_to_jsonl(self.passage_dir)
-        passage_pos_ids = get_passage_pos_ids(self.passage_dir, self.pos_map_save_path)
-        return passage_pos_ids
+        passage_pos_ids, passage_filenames = get_passage_pos_ids(self.passage_dir, self.pos_array_save_path, 
+                                                                 self.passage_filenames_save_path, self.deprioritized_domains)
+        return passage_pos_ids, passage_filenames
 
-    def load_psg_pos_id_map(self,):
-        if os.path.exists(self.pos_map_save_path):
-            with open(self.pos_map_save_path, 'rb') as f:
-                psg_pos_id_map = pickle.load(f)
+    def load_psg_pos_id_array(self,):
+        if os.path.exists(self.pos_array_save_path) and os.path.exists(self.passage_filenames_save_path):
+            with open(self.pos_array_save_path, 'rb') as f:
+                psg_pos_id_array = np.load(f)
+            with open(self.passage_filenames_save_path, 'rb') as f:
+                passage_filenames = np.load(f, allow_pickle=True)
         else:
-            psg_pos_id_map = self.build_passage_pos_id_map()
-        return psg_pos_id_map
-    
-    def _id2psg(self, shard_id, chunk_id):
-        filename, position = self.psg_pos_id_map[shard_id][chunk_id]
-        with open(filename, 'r') as file:
+            psg_pos_id_array, passage_filenames = self.build_passage_pos_id_array()
+        return psg_pos_id_array, passage_filenames
+
+    def _get_passage(self, index_id):
+        filename = self.passage_filenames[self.index_id_to_file_id[index_id]]
+        position = self.psg_pos_id_array[index_id]
+        with open(os.path.join(self.passage_dir, filename), 'r') as file:
             file.seek(position)
             line = file.readline()
         return json.loads(line)
-    
-    def _get_passage(self, index_id):
-        shard_id, chunk_id = self.index_id_to_db_id[index_id]
-        return self._id2psg(shard_id, chunk_id)
-    
+
     def _get_domain(self, index_id):
-        shard_id, chunk_id = self.index_id_to_db_id[index_id]
-        filename, position = self.psg_pos_id_map[shard_id][chunk_id]
+        filename = self.passage_filenames[self.index_id_to_file_id[index_id]]
         return os.path.basename(filename).split("raw_passages")[0].split("--")[0]
 
     def get_retrieved_passages(self, all_indices):
@@ -208,76 +228,14 @@ class IVFFlatIndexer(object):
         for query_indices in all_indices:
             domain_per_query = [self._get_domain(int(index_id)) for index_id in query_indices]
             passages_per_query = [self._get_passage(int(index_id))["text"] for index_id in query_indices]
-            db_ids_per_query = [self.index_id_to_db_id[int(index_id)] for index_id in query_indices]
+            db_ids_per_query = [int(index_id) for index_id in query_indices]
             domains.append(domain_per_query)
             passages.append(passages_per_query)
             db_ids.append(db_ids_per_query)
         return domains, passages, db_ids
     
     def search(self, query_embs, k=4096):
-        indices_length = len(self.index_id_to_db_id)
-        pos_length = 0
-        for shard_id in self.psg_pos_id_map:
-            for chunk_id in self.psg_pos_id_map[shard_id]:
-                pos_length += 1
         all_scores, all_indices = self.index.search(query_embs.astype(np.float32), k)
         all_domains, all_passages, db_ids = self.get_retrieved_passages(all_indices)
         return all_scores.tolist(), all_domains, all_passages, db_ids
         
-
-
-def test_build_multi_shard_dpr_wiki():
-    embed_dir = '/checkpoint/amaia/explore/comem/data/scaling_out/embeddings/facebook/contriever-msmarco/dpr_wiki/8-shards'
-    embed_paths = [os.path.join(embed_dir, filename) for filename in os.listdir(embed_dir) if filename.endswith('.pkl')]
-    sample_train_size = 6000000
-    projection_size = 768
-    ncentroids = 4096
-    formatted_index_name = f"index_ivf_flat_ip.{sample_train_size}.{projection_size}.{ncentroids}.faiss"
-    index_dir = '/checkpoint/amaia/explore/comem/data/scaling_out/embeddings/facebook/contriever-msmarco/dpr_wiki/8-shards/index_ivf_flat/'
-    os.makedirs(index_dir, exist_ok=True)
-    index_path = os.path.join(index_dir, formatted_index_name)
-    meta_file = os.path.join(index_dir, formatted_index_name+'.meta')
-    trained_index_path = os.path.join(index_dir, formatted_index_name+'.trained')
-    pos_map_save_path = os.path.join(index_dir, 'passage_pos_id_map.pkl')
-    passage_dir = '/checkpoint/amaia/explore/comem/data/massive_ds_1.4t/scaling_out/passages/dpr_wiki/8-shards'
-    index = IVFFlatIndexer(
-        embed_paths,
-        index_path,
-        meta_file,
-        trained_index_path,
-        passage_dir=passage_dir,
-        pos_map_save_path=pos_map_save_path,
-        sample_train_size=sample_train_size,
-        dimension=projection_size,
-        ncentroids=ncentroids,
-        )
-
-
-def test_build_single_shard_dpr_wiki():
-    embed_dir = '/checkpoint/amaia/explore/comem/data/scaling_out/embeddings/facebook/dragon-plus-context-encoder/dpr_wiki/8-shards'
-    embed_paths = [os.path.join(embed_dir, filename) for filename in os.listdir(embed_dir) if filename.endswith('.pkl')]
-    sample_train_size = 6000000
-    projection_size = 768
-    ncentroids = 4096
-    formatted_index_name = f"index_ivf_flat_ip.{sample_train_size}.{projection_size}.{ncentroids}.faiss"
-    index_dir = '/checkpoint/amaia/explore/comem/data/scaling_out/embeddings/facebook/dragon-plus-context-encoder/dpr_wiki/8-shards/index_ivf_flat/'
-    os.makedirs(index_dir, exist_ok=True)
-    index_path = os.path.join(index_dir, formatted_index_name)
-    meta_file = os.path.join(index_dir, formatted_index_name+'.meta')
-    trained_index_path = os.path.join(index_dir, formatted_index_name+'.trained')
-    pos_map_save_path = os.path.join(index_dir, 'passage_pos_id_map.pkl')
-    passage_dir = '/checkpoint/amaia/explore/comem/data/massive_ds_1.4t/scaling_out/passages/dpr_wiki/8-shards'
-    index = IVFFlatIndexer(
-        embed_paths,
-        index_path,
-        meta_file,
-        trained_index_path,
-        passage_dir=passage_dir,
-        pos_map_save_path=pos_map_save_path,
-        sample_train_size=sample_train_size,
-        dimension=projection_size,
-        ncentroids=ncentroids,
-        )
-
-if __name__ == '__main__':
-    test_build_multi_shard_dpr_wiki()
