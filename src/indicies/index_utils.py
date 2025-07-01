@@ -53,12 +53,15 @@ def convert_pkl_to_jsonl(passage_dir):
         pkl_files = [filename for filename in filenames if '.pkl' in filename]
         jsonl_files = [filename for filename in filenames if '.jsonl' in filename]
         print (f"Found {len(pkl_files)} pkl files and {len(jsonl_files)} jsonl files under {passage_dir}")
-        if len(pkl_files)==len(jsonl_files):
+        if len(pkl_files)<=len(jsonl_files):
             return
         print(f"Converting passages to JSONL data format: {passage_dir}")
     elif os.path.isfile(passage_dir):
-        assert '.pkl' in passage_dir
-        pkl_files = [passage_dir]
+        assert '.pkl' in passage_dir or '.jsonl' in passage_dir, f"File {passage_dir} is neither a .pkl nor a .jsonl file."
+        if '.pkl' in passage_dir:
+            pkl_files = [passage_dir]
+        else:
+            return
     else:
         print(f"{passage_dir} does not exist or is neither a file nor a directory.")
         raise AssertionError
@@ -127,7 +130,6 @@ def get_passage_pos_ids(passage_dir, pos_array_save_path, filenames_save_path, d
 
     elif os.path.isfile(passage_dir):
         # NOTE: deprecated feature, will be removed in future release.
-        assert '.pkl' in passage_dir and os.path.exists(passage_dir.replace('.pkl', '.jsonl'))
         file_path = passage_dir.replace('.pkl', '.jsonl')
         print(f"Generating id2pos for {file_path}")
 
