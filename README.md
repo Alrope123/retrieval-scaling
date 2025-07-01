@@ -27,14 +27,14 @@ huggingface-cli login --token <your_hf_token> # ignore if use custom data
 ```bash
 bash scripts/download_compactds.sh --output_path datastores/compactds
 ```
-- Build the index positions to passages map for your local file system:
+<!-- - Build the index positions to passages map for your local file system:
 ```bash
 python -m src.main_ric \
     --config-name  \
     tasks.datastore.index=true \
     datastore.embedding.embedding_dir=datastores/compactds \
     datastore.embedding.passages_dir=datastores/compactds/passages
-```
+``` -->
 
 ### Run Retreval
 - Download the search queries we included in the paper for the five datasets: MMLU, MMLU Pro, AGI Eval, GPQA, and Minerva Math.
@@ -46,6 +46,7 @@ python scripts/download_queries.py --output_path queries
 python -m src.main_ric \
     --config-name CompactDS \
     tasks.eval.search=true \
+    datastore.embedding.passages_dir=datastores/compactds/passages \
     tasks.eval.task_name=lm-eval \ # Optional
     evaluation.data.eval_data=queries/mmlu_pro.jsonl \ # Optional 
     evaluation.search.n_docs=1000

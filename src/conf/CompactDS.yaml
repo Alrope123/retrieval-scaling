@@ -4,6 +4,7 @@ tasks:
   datastore:
     embedding: false
     index: false
+    add_to_index: false
   eval: 
     task_name: gen  # task name is used to load the eval data. Options:["perplexity", "lm-eval"].
     search: false  # search top-k offline
@@ -27,10 +28,10 @@ datastore:
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v2_3
+    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v4_1
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
-    passages_dir: /weka_data/xinxil/private-retrieval-lm/ours_v2_3/passages
+    passages_dir: /weka_data/xinxil/private-retrieval-lm/upload/passages
     max_files_per_shard: 1
 
     per_gpu_batch_size: 512
@@ -46,7 +47,7 @@ datastore:
 
 
     prefix: "passages"
-    embedding_dir: /weka_data/xinxil/private-retrieval-lm/ours_v2_3/embeddings/
+    embedding_dir: /weka_data/xinxil/private-retrieval-lm/ours_v4_1/embeddings/
     use_saved_if_exists: false
 
   index:
@@ -66,7 +67,7 @@ datastore:
     n_subquantizers: 64 # 64 in silo    # Number of subquantizer used for vector quantization, if 0 flat index is used; introducing compression rate of embedding_dimension / n_subquantizers
     n_bits: 8    # Number of bits per subquantizer, introducing compression rate of embedding_precision / n_bits
     overwrite: false
-
+    deprioritized_domains: ["massiveds-rpj_arxiv", "massiveds-rpj_github", "massiveds-rpj_book", "lb_full"]
 
 evaluation:
   domain: mmlu
