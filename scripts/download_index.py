@@ -14,7 +14,7 @@ def main(args):
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_name", type=str, default="alrope/compactds", help="Name of the Huggingface dataset to download")
+    parser.add_argument("--dataset_name", type=str, default="alrope/CompactDS-102GB", help="Name of the Huggingface dataset to download")
     parser.add_argument("--output_path", type=str, help="Path to the local directory to save the downloaded files")
     args = parser.parse_args()
     main(args)

@@ -12,9 +12,7 @@ output_dir=$1
 python scripts/download_index.py --output_path output_dir
 
 # Combine the shards
-cat output_dir/embeddings/index_IVFPQ/index_IVFPQ.100000000.768.65536.64.faiss.meta* > index_IVFPQ.100000000.768.65536.64.faiss.meta
 cat output_dir/embeddings/index_IVFPQ/index_IVFPQ.100000000.768.65536.64.faiss* > index_IVFPQ.100000000.768.65536.64.faiss
 
 # Remove shard files
-rm output_dir/embeddings/index_IVFPQ/index_IVFPQ.100000000.768.65536.64.faiss.meta_*
 rm output_dir/embeddings/index_IVFPQ/index_IVFPQ.100000000.768.65536.64.faiss_*
