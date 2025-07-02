@@ -11,7 +11,7 @@ TODO
 ```
 
 ### Announcement
-**xx /xx**: We officially relase the index and the code for CompactDS.
+** 07/01/25**: We officially relase the index and the code for CompactDS.
 
 ## Installation
 To create a conda environment `scaling` with Python 3.11:

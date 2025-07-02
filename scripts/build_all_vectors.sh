@@ -15,7 +15,7 @@ output_dir=$2
 # Process the argument
 for datastore in "${datastores[@]}"; do
   echo "Building vectors for: $datastores"
-  python -m ric.main_ric --config-name $datastore tasks.datastore.embedding=true datastore.raw_data_path=$download_dir/$datastore datastore.embedding.output_dir=$output_dir/$datastore
+  python -m src.main_ric --config-name $datastore tasks.datastore.embedding=true datastore.raw_data_path=$download_dir/$datastore datastore.embedding.output_dir=$output_dir/$datastore
 done
 
 
