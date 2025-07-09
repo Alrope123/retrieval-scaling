@@ -3,7 +3,7 @@
 
 This repository contains the codes for building and obtaining the retrieval results from the datastore in [Frustratingly Simple Retrieval Improves Challenging, Reasoning-Intensive Benchmarks](TODO).
 
-Refer to [Private-Retrieval](TODO) for running evaluations using the retrieval results.
+Refer to [compactds-eval](TODO) for running evaluations using the retrieval results.
 
 ### Citation
 ```
@@ -27,14 +27,6 @@ huggingface-cli login --token <your_hf_token> # ignore if use custom data
 ```bash
 bash scripts/download_compactds.sh --output_path datastores/compactds
 ```
-<!-- - Build the index positions to passages map for your local file system:
-```bash
-python -m src.main_ric \
-    --config-name  \
-    tasks.datastore.index=true \
-    datastore.embedding.embedding_dir=datastores/compactds \
-    datastore.embedding.passages_dir=datastores/compactds/passages
-``` -->
 
 ### Run Retreval
 - Download the search queries we included in the paper for the five datasets: MMLU, MMLU Pro, AGI Eval, GPQA, and Minerva Math.

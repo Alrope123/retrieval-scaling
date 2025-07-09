@@ -27,7 +27,7 @@ datastore:
   
   embedding:
     raw_data_path: ${datastore.raw_data_path}
-    output_dir: /weka_data/xinxil/private-retrieval-lm/ours_v1/high-quality_cc
+    output_dir: /weka_data/xinxil/private-retrieval-lm/datastores/high-quality_cc
     chunk_size: ${datastore.chunk_size}
     keep_last_chunk: true
     passages_dir: ${datastore.embedding.output_dir}/passages/${datastore.domain}
